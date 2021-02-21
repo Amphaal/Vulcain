@@ -90,7 +90,7 @@ class CreateInfo : public VkInstanceCreateInfo {
         /* order is important !*/
         if(getenv("VK_LAYER_PATH")) { // if not layer path is hardcoded, assume it is prod env and skipping
             _bindValidationLayers();
-            // _addDebugCallback(Vulcain::debugCallback); TODO crashes
+            _addDebugCallback(Vulcain::debugCallback);
         }
 
         //
@@ -162,7 +162,7 @@ class CreateInfo : public VkInstanceCreateInfo {
     void _addDebugCallback(PFN_vkDebugUtilsMessengerCallbackEXT cb) {
         assert(!_debugInfo);
 
-        _debugInfo = new VkDebugUtilsMessengerCreateInfoEXT;
+        _debugInfo = new VkDebugUtilsMessengerCreateInfoEXT{};
         _debugInfo->sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
         _debugInfo->messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
         _debugInfo->messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
