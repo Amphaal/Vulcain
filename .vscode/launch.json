@@ -1,0 +1,20 @@
+{
+    // Utilisez IntelliSense pour en savoir plus sur les attributs possibles.
+    // Pointez pour afficher la description des attributs existants.
+    // Pour plus d'informations, visitez : https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "targetArchitecture": "x64",
+            "type": "cppdbg",
+            "preLaunchTask": "2. Build",
+            "name" : "Launch",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "MIMode": "gdb",
+            "externalConsole": false,
+            "program": "${workspaceFolder}/build/Vulcain.exe",
+            "miDebuggerPath": "${env:MINGW64_ROOT}/bin/gdb.exe"
+        },
+    ]
+}
