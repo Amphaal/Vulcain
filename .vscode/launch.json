@@ -14,7 +14,13 @@
             "MIMode": "gdb",
             "externalConsole": false,
             "program": "${workspaceFolder}/build/Vulcain.exe",
-            "miDebuggerPath": "${env:MINGW64_ROOT}/bin/gdb.exe"
+            "miDebuggerPath": "${env:MINGW64_ROOT}/bin/gdb.exe",
+            "environment": [
+                {
+                    "name": "VK_LAYER_PATH",
+                    "value": "C:\\msys64\\mingw64\\lib"
+                }
+            ]
         },
     ]
 }
