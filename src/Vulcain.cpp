@@ -8,6 +8,7 @@
 
 #include <iostream>
 #include <vector>
+#include <map>
 
 #include <stdio.h>
 #include <string.h>
@@ -196,8 +197,8 @@ class Instance {
         vkDestroyInstance(_instance, nullptr);
     }
 
-    VkInstance* get() {
-        return &_instance;
+    VkInstance& get() {
+        return _instance;
     }
 
  private:
@@ -217,6 +218,79 @@ class Instance {
 
     const CreateInfo* _createInfos = nullptr;
     VkInstance _instance;
+};
+
+
+class Device {
+ public:
+    Device(Vulcain::Instance* instance) : _instance(instance) {
+        _pickBestPhysicalDevice();
+    }
+ private:
+    Vulcain::Instance* _instance = nullptr;
+    VkPhysicalDevice _pickedPDevice = VK_NULL_HANDLE;
+    std::multimap<int, VkPhysicalDevice> _pDevicesCandidates;
+
+    void _pickBestPhysicalDevice() {
+    // get physical devices
+        uint32_t deviceCount = 0;
+        vkEnumeratePhysicalDevices(_instance->get(), &deviceCount, nullptr);
+        assert(deviceCount);
+        std::vector<VkPhysicalDevice> availablePDevices(deviceCount);
+        vkEnumeratePhysicalDevices(_instance->get(), &deviceCount, availablePDevices.data());
+
+        // find score for each physical device
+        for (const auto& device : availablePDevices) {
+            auto score = _rateDeviceSuitability(device);
+            if(!score) continue;
+            _pDevicesCandidates.insert(std::make_pair(score, device));
+        }
+        assert(_pDevicesCandidates.size());
+
+        // pick the one with most points
+        _pickedPDevice = _pDevicesCandidates.rbegin()->second;
+    }
+
+    int _rateDeviceSuitability(const VkPhysicalDevice &pDevice) {
+        VkPhysicalDeviceProperties deviceProperties;
+        VkPhysicalDeviceFeatures deviceFeatures;
+        vkGetPhysicalDeviceProperties(pDevice, &deviceProperties);
+        vkGetPhysicalDeviceFeatures(pDevice, &deviceFeatures);
+
+        int score = 0;
+
+        // Discrete GPUs have a significant performance advantage
+        if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
+            score += 1000;
+        }
+
+        // Maximum possible size of textures affects graphics quality
+        score += deviceProperties.limits.maxImageDimension2D;
+
+        // Application can't function without geometry shaders
+        if (!deviceFeatures.geometryShader) {
+            return 0;
+        }
+
+        // get queues
+        uint32_t queueFamilyCount = 0;
+        vkGetPhysicalDeviceQueueFamilyProperties(pDevice, &queueFamilyCount, nullptr);
+        std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+        vkGetPhysicalDeviceQueueFamilyProperties(pDevice, &queueFamilyCount, queueFamilies.data());
+
+        // make sure this physical device can do graphics
+        bool hasGraphicsQueue = false;
+        for (const auto& queueFamily : queueFamilies) {
+            if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+                hasGraphicsQueue = true; 
+                break;
+            }
+        }
+        if(!hasGraphicsQueue) return false;
+
+        //
+        return score;
+    }
 };
 
 }; // namespace Vulcain
@@ -263,6 +337,7 @@ int main() {
 
     Vulcain::CreateInfo createInfos(&appInfo);
     Vulcain::Instance instance(&createInfos);
+
 
     return 0;
 }
