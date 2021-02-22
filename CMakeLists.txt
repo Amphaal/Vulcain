@@ -30,7 +30,7 @@ set(CMAKE_C_STANDARD 17)
 #############
 
 add_executable(Vulcain 
-    src/Vulcain.cpp
+    src/main.cpp
 )
 
 ##################

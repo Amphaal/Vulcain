@@ -12,7 +12,8 @@
                 "limitSymbolsToIncludedHeaders": true
             },
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/src/engine"
             ],
             "defines": [
                 "_DEBUG",
