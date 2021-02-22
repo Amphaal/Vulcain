@@ -33,6 +33,10 @@ add_executable(Vulcain
     src/main.cpp
 )
 
+target_include_directories(Vulcain PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
 ##################
 ## Dependencies ##
 ##################

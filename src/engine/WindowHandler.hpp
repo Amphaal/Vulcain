@@ -19,8 +19,14 @@
 
 #pragma once
 
+#define VK_USE_PLATFORM_WIN32_KHR
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
+
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <GLFW/glfw3native.h>
+
+namespace Vulcain {
 
 class WindowHandler {
  public:    
@@ -45,7 +51,13 @@ class WindowHandler {
         }
     }
 
+    HWND handle() {
+        return glfwGetWin32Window(_window);
+    }
+
  private:
     GLFWwindow* _window = nullptr;
     bool _inited = false;
 };
+
+}; // namespace Vulcain

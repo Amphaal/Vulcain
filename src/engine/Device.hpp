@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "Instance.hpp"
+#include "Surface.hpp"
 
 #include <map>
 
@@ -27,7 +27,7 @@ namespace Vulcain {
 
 class Device {
  public:
-    Device(Vulcain::Instance* instance) : _instance(instance) {
+    Device(Vulcain::Surface* surface) : _surface(surface) {
         _pickBestPhysicalDevice();
         _instaciateLogicalDevice();
 
@@ -40,7 +40,7 @@ class Device {
     }
 
  private:
-    Vulcain::Instance* _instance = nullptr;
+    Vulcain::Surface* _surface = nullptr;
 
     VkPhysicalDevice _pickedPDevice = VK_NULL_HANDLE;
     VkDevice _device;
@@ -51,13 +51,17 @@ class Device {
 
     static auto const REQUIRED_QUEUE_TYPE = VK_QUEUE_GRAPHICS_BIT;
 
+    Instance* _instance() {
+        return _surface->instance();
+    }
+
     void _pickBestPhysicalDevice() {
     // get physical devices
         uint32_t deviceCount = 0;
-        vkEnumeratePhysicalDevices(_instance->get(), &deviceCount, nullptr);
+        vkEnumeratePhysicalDevices(_instance()->get(), &deviceCount, nullptr);
         assert(deviceCount);
         std::vector<VkPhysicalDevice> availablePDevices(deviceCount);
-        vkEnumeratePhysicalDevices(_instance->get(), &deviceCount, availablePDevices.data());
+        vkEnumeratePhysicalDevices(_instance()->get(), &deviceCount, availablePDevices.data());
 
         // find score for each physical device
         for (const auto& device : availablePDevices) {
@@ -71,13 +75,17 @@ class Device {
         _pickedPDevice = _pDevicesCandidates.rbegin()->second;
     }
 
-    int _rateDeviceSuitability(const VkPhysicalDevice &pDevice) {
+    int _rateDeviceSuitability(const VkPhysicalDevice &pDevice) const {
+        int score = 0;
+
+        // check properties
         VkPhysicalDeviceProperties deviceProperties;
         VkPhysicalDeviceFeatures deviceFeatures;
         vkGetPhysicalDeviceProperties(pDevice, &deviceProperties);
         vkGetPhysicalDeviceFeatures(pDevice, &deviceFeatures);
 
-        int score = 0;
+        // Application can't function without geometry shaders
+        if (!deviceFeatures.geometryShader) return 0;
 
         // Discrete GPUs have a significant performance advantage
         if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
@@ -87,11 +95,16 @@ class Device {
         // Maximum possible size of textures affects graphics quality
         score += deviceProperties.limits.maxImageDimension2D;
 
-        // Application can't function without geometry shaders
-        if (!deviceFeatures.geometryShader) {
-            return 0;
-        }
+        // check queues
+        if(!_hasPotententQueue(pDevice)) return 0;
 
+        //
+        return score;
+    }
+
+    bool _hasPotententQueue(const VkPhysicalDevice &pDevice) const {
+        bool hasPotentQueue = false;
+        
         // get queues
         uint32_t queueFamilyCount = 0;
         vkGetPhysicalDeviceQueueFamilyProperties(pDevice, &queueFamilyCount, nullptr);
@@ -99,17 +112,22 @@ class Device {
         vkGetPhysicalDeviceQueueFamilyProperties(pDevice, &queueFamilyCount, queueFamilies.data());
 
         // make sure this physical device can do graphics
-        bool hasGraphicsQueue = false;
         for (const auto& queueFamily : queueFamilies) {
-            if (queueFamily.queueFlags & REQUIRED_QUEUE_TYPE) {
-                hasGraphicsQueue = true; 
-                break;
-            }
-        }
-        if(!hasGraphicsQueue) return false;
+            // check if required queue is handled
+            auto requiredQueueHandled = queueFamily.queueFlags & REQUIRED_QUEUE_TYPE;
+            if (!requiredQueueHandled) continue;
+            
+            // check if surface can do presentation
+            VkBool32 presentSupport = false;
+            vkGetPhysicalDeviceSurfaceSupportKHR(pDevice, REQUIRED_QUEUE_TYPE, _surface->get(), &presentSupport);
+            if (!presentSupport) continue;
 
-        //
-        return score;
+            //
+            hasPotentQueue = true;
+            break;
+        }
+
+        return hasPotentQueue;
     }
 
     void _instaciateLogicalDevice() {
@@ -130,7 +148,7 @@ class Device {
         deviceCreateInfo.queueCreateInfoCount = 1;
         deviceCreateInfo.pEnabledFeatures = &deviceFeatures;
         //
-        if(auto createInfo = _instance->createInfo(); createInfo->enabledLayerCount) {
+        if(auto createInfo = _instance()->createInfo(); createInfo->enabledLayerCount) {
             deviceCreateInfo.enabledLayerCount = createInfo->enabledLayerCount;
             deviceCreateInfo.ppEnabledLayerNames = createInfo->ppEnabledLayerNames;
         }

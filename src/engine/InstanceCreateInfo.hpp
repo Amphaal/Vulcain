@@ -68,7 +68,7 @@ class AvailableExtensions {
         }
     }
 
-    void assertAll(const std::vector<const char*> &extsToUse) {
+    void assertAll(const std::vector<const char*> &extsToUse) const {
         for(auto const & requiredExt : extsToUse) {            
             //
             auto requiredIsAvailable = _extensionsContains(requiredExt);
@@ -82,7 +82,7 @@ class AvailableExtensions {
     std::vector<VkExtensionProperties> _extensions;
     uint32_t _extensionCount = 0;
 
-    bool _extensionsContains(const char *const &requiredExt) const{
+    bool _extensionsContains(const char *const &requiredExt) const {
         for(const auto &available : _extensions) {
             if(strcmp(requiredExt, available.extensionName) == 0) {
                 return true;
@@ -92,9 +92,9 @@ class AvailableExtensions {
     }
 };
 
-class CreateInfo : public VkInstanceCreateInfo {
+class InstanceCreateInfo : public VkInstanceCreateInfo {
  public:
-    CreateInfo(const VkApplicationInfo * appInfo) : VkInstanceCreateInfo{} {
+    InstanceCreateInfo(const VkApplicationInfo * appInfo) : VkInstanceCreateInfo{} {
         //
         assert(appInfo);
 
@@ -116,7 +116,7 @@ class CreateInfo : public VkInstanceCreateInfo {
         return _debugInfo;
     }
 
-    ~CreateInfo() {
+    ~InstanceCreateInfo() {
         if(_debugInfo) delete _debugInfo;
     }
 

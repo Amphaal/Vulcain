@@ -19,13 +19,13 @@
 
 #pragma once
 
-#include "CreateInfo.hpp"
+#include "InstanceCreateInfo.hpp"
 
 namespace Vulcain {
 
 class Instance {
  public:
-    Instance(const CreateInfo* createInfos) : _createInfos(createInfos) {
+    Instance(const InstanceCreateInfo* createInfos) : _createInfos(createInfos) {
         assert(createInfos);
         //
         auto result = vkCreateInstance(_createInfos, nullptr, &_instance);
@@ -51,7 +51,7 @@ class Instance {
         return _instance;
     }
 
-    const CreateInfo* createInfo() const {
+    const InstanceCreateInfo* createInfo() const {
         return _createInfos;
     }
 
@@ -70,7 +70,7 @@ class Instance {
     };
 
 
-    const CreateInfo* _createInfos = nullptr;
+    const InstanceCreateInfo* _createInfos = nullptr;
     VkInstance _instance;
 };
 

@@ -17,7 +17,6 @@
 // for further details. Graphical resources without explicit references to a
 // different license and copyright still refer to this GPL.
 
-#include "window/WindowHandler.hpp"
 #include "engine/Device.hpp"
 
 #define GLM_FORCE_RADIANS
@@ -26,7 +25,7 @@
 #include <glm/mat4x4.hpp>
 
 int main() {
-    WindowHandler handler;
+    Vulcain::WindowHandler handler;
 
     VkApplicationInfo appInfo{};
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -36,9 +35,10 @@ int main() {
     appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
     appInfo.apiVersion = VK_API_VERSION_1_0;
 
-    Vulcain::CreateInfo createInfos(&appInfo);
-    Vulcain::Instance instance(&createInfos);
-    Vulcain::Device device(&instance);
+    Vulcain::InstanceCreateInfo createInfo(&appInfo);
+    Vulcain::Instance instance(&createInfo);
+    Vulcain::Surface surface(&handler, &instance);
+    Vulcain::Device device(&surface);
 
     return 0;
 }
