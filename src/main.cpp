@@ -17,7 +17,7 @@
 // for further details. Graphical resources without explicit references to a
 // different license and copyright still refer to this GPL.
 
-#include "engine/Device.hpp"
+#include "engine/Swapchain.hpp"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -39,6 +39,7 @@ int main() {
     Vulcain::Instance instance(&createInfo);
     Vulcain::Surface surface(&handler, &instance);
     Vulcain::Device device(&surface);
+    Vulcain::Swapchain swapchain(&device);
 
     return 0;
 }

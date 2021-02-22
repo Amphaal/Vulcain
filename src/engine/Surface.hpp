@@ -26,7 +26,7 @@ namespace Vulcain {
 
 class Surface {
  public:    
-    Surface(WindowHandler* windowHandler, Instance* instance) : _instance(instance) {
+    Surface(WindowHandler* windowHandler, Instance* instance) : _instance(instance), _windowHandler(windowHandler) {
         VkWin32SurfaceCreateInfoKHR createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
         createInfo.hwnd = windowHandler->handle();
@@ -44,6 +44,10 @@ class Surface {
         return _instance;
     }
 
+    Vulcain::WindowHandler* window() const {
+        return _windowHandler;
+    }
+
     VkSurfaceKHR& get() {
         return _surface;
     }
@@ -51,6 +55,7 @@ class Surface {
  private:
     VkSurfaceKHR _surface;
     Vulcain::Instance* _instance = nullptr;
+    Vulcain::WindowHandler* _windowHandler = nullptr;
 };
 
 }; // namespace Vulcain

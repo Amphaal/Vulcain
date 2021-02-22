@@ -55,6 +55,16 @@ class WindowHandler {
         return glfwGetWin32Window(_window);
     }
 
+    VkExtent2D framebufferSize() {
+        int width, height;
+        glfwGetFramebufferSize(_window, &width, &height);
+        
+        return {
+            static_cast<uint32_t>(width),
+            static_cast<uint32_t>(height)
+        };
+    }
+
  private:
     GLFWwindow* _window = nullptr;
     bool _inited = false;
