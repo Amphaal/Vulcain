@@ -17,6 +17,10 @@ project(Vulcain
     LANGUAGES CXX
 )
 
+list(APPEND CMAKE_MODULE_PATH 
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake
+)
+
 ################################
 ## CPP Compiler Configuration ##
 ################################
@@ -57,4 +61,4 @@ target_link_libraries(Vulcain PRIVATE glm)
 #
 
 add_subdirectory(shaders)
-add_dependencies(Vulcain Shaders)
+target_link_libraries(Vulcain PRIVATE shadersResources)
