@@ -23,36 +23,57 @@
 
 namespace Vulcain {
 
-class Swapchain {
+class Swapchain : public VkSwapchainCreateInfoKHR {
  public:
-    Swapchain(Device* device) : _device(device) {
+    Swapchain(Device* device) : VkSwapchainCreateInfoKHR{}, _device(device) {
         //
         auto const &swapChainSupport = _device->swapchainDetails();
+        const auto swapSurfaceFormat = swapChainSupport.getSwapSurfaceFormat();
+        const auto extent = swapChainSupport.getSwapExtent(device->surface()->window());
+        const auto presentMode = swapChainSupport.getSwapPresentMode();
+
+        // determine image count
         auto imageCount = swapChainSupport.capabilities.minImageCount + 1;
         if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount) {
             imageCount = swapChainSupport.capabilities.maxImageCount;
         }
 
-        const auto swapSurfaceFormat = swapChainSupport.getSwapSurfaceFormat();
-        const auto extent = swapChainSupport.getSwapExtent(device->surface()->window());
+        this->sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+        this->surface = _device->surface()->get();
+        this->minImageCount = imageCount;
+        this->imageFormat = swapSurfaceFormat.format;
+        this->imageColorSpace = swapSurfaceFormat.colorSpace;
+        this->imageExtent = extent;
+        this->imageArrayLayers = 1;
+        this->imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+        this->preTransform = swapChainSupport.capabilities.currentTransform;
+        this->compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR; // determine transparency behavior with other windows, here just disable any transparency
+        this->presentMode = presentMode;
+        this->clipped = VK_TRUE;
 
-        VkSwapchainCreateInfoKHR createInfo{};
-        createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-        createInfo.surface = _device->surface()->get();
-        createInfo.minImageCount = imageCount;
-        createInfo.imageFormat = swapSurfaceFormat.format;
-        createInfo.imageColorSpace = swapSurfaceFormat.colorSpace;
-        createInfo.imageExtent = extent;
-        createInfo.imageArrayLayers = 1;
-        createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+        // since both presentation and graphics queues are the same index...
+        this->imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        this->queueFamilyIndexCount = 0; // Optional
+        this->pQueueFamilyIndices = nullptr; // Optional
 
-        //TODO finish with https://vulkan-tutorial.com/Drawing_a_triangle/Presentation/Swap_chain
-
-        //
-        auto result = vkCreateSwapchainKHR(_device->get(), &createInfo, nullptr, &_swapChain);
+        // create swapchain...
+        auto result = vkCreateSwapchainKHR(_device->get(), this, nullptr, &_swapChain);
         assert(result == VK_SUCCESS);
+
+        // get images
+        vkGetSwapchainImagesKHR(_device->get(), _swapChain, &imageCount, nullptr);
+        _swapChainImages.resize(imageCount);
+        vkGetSwapchainImagesKHR(_device->get(), _swapChain, &imageCount, _swapChainImages.data());
     }
-    
+
+    Device* device() const {
+        return _device;
+    }
+
+    const std::vector<VkImage>& images() const {
+        return _swapChainImages;
+    }
+
     ~Swapchain() {
         vkDestroySwapchainKHR(_device->get(), _swapChain, nullptr);
     }
@@ -60,6 +81,7 @@ class Swapchain {
  private:
     VkSwapchainKHR _swapChain;
     Device* _device = nullptr;
+    std::vector<VkImage> _swapChainImages;
 };
 
 }; // namespace Vulcain

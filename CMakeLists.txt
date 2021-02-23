@@ -52,3 +52,9 @@ target_link_libraries(Vulcain PRIVATE glfw3)
 find_package(glm REQUIRED)
 target_link_libraries(Vulcain PRIVATE glm)
 
+#
+## 
+#
+
+add_subdirectory(shaders)
+add_dependencies(Vulcain Shaders)
