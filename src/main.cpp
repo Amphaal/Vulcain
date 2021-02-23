@@ -19,6 +19,7 @@
 
 #include "engine/ImageViews.hpp"
 #include "engine/Shaders.hpp"
+#include "engine/Renderpass.hpp"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -41,10 +42,10 @@ int main() {
     Vulcain::Surface surface(&handler, &instance);
     Vulcain::Device device(&surface);
     Vulcain::Swapchain swapchain(&device);
-    Vulcain::Shaders shaders(&device);
+
+    Vulcain::Renderpass renderpass(&swapchain);
+    Vulcain::Shaders shaders(&swapchain);
     Vulcain::ImageViews views(&swapchain);
-
-
 
     return 0;
 }
