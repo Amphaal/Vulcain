@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include <volk.h>
+
 #include "InstanceCreateInfo.hpp"
 
 namespace Vulcain {
@@ -27,9 +29,11 @@ class Instance {
  public:
     Instance(const InstanceCreateInfo* createInfos) : _createInfos(createInfos) {
         assert(createInfos);
+
         //
         auto result = vkCreateInstance(_createInfos, nullptr, &_instance);
         assert(result == VK_SUCCESS); 
+        volkLoadInstance(_instance);
 
         //
         _mayCreateDebugMessenger();

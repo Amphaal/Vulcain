@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include <volk.h>
+
 #include "Surface.hpp"
 
 #include <map>
@@ -295,6 +297,9 @@ class Device {
             &_device
         );
         assert(result == VK_SUCCESS);
+        
+        //
+        volkLoadDevice(_device);
     }
 };
 

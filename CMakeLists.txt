@@ -27,7 +27,7 @@ list(APPEND CMAKE_MODULE_PATH
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_C_STANDARD 17)
+set(CMAKE_C_STANDARD 11)
 
 #############
 ## Sources ##
@@ -45,20 +45,49 @@ target_include_directories(Vulcain PUBLIC
 ## Dependencies ##
 ##################
 
-find_package(PkgConfig REQUIRED)
-
-pkg_check_modules(Vulkan REQUIRED IMPORTED_TARGET vulkan)
-target_link_libraries(Vulcain PRIVATE PkgConfig::Vulkan)
-
-find_package(glfw3 REQUIRED)
-target_link_libraries(Vulcain PRIVATE glfw3)
-
-find_package(glm REQUIRED)
-target_link_libraries(Vulcain PRIVATE glm)
-
 #
-## 
+# Vulkan Loader !
 #
 
-add_subdirectory(shaders)
-target_link_libraries(Vulcain PRIVATE shadersResources)
+    # standard Vulkan loader
+    # find_package(PkgConfig REQUIRED)
+    # pkg_check_modules(Vulkan REQUIRED IMPORTED_TARGET vulkan)
+    # target_link_libraries(Vulcain PRIVATE PkgConfig::Vulkan)
+
+    # optimised volk Vulkan loader
+    if (WIN32)
+        set(VOLK_STATIC_DEFINES VK_USE_PLATFORM_WIN32_KHR)
+    endif()
+    add_subdirectory(deps/volk)
+    target_link_libraries(Vulcain PRIVATE volk)
+
+#
+# glfw
+#
+
+    find_package(glfw3 REQUIRED)
+    target_link_libraries(Vulcain PRIVATE glfw3)
+
+#
+# glm
+#
+
+    find_package(glm REQUIRED)
+    target_link_libraries(Vulcain PRIVATE glm)
+
+#
+# SPIR-V Shaders
+#
+
+    add_subdirectory(shaders)
+    target_link_libraries(Vulcain PRIVATE shadersResources)
+
+#
+# VLA
+#
+
+    add_library(VulkanMemoryAllocator INTERFACE)
+    target_include_directories(VulkanMemoryAllocator INTERFACE 
+        deps/VMA/src
+    )
+    target_link_libraries(Vulcain PRIVATE VulkanMemoryAllocator)
