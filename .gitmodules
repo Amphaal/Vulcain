@@ -1,0 +1,6 @@
+[submodule "deps/volk"]
+	path = deps/volk
+	url = https://github.com/zeux/volk
+[submodule "deps/VMA"]
+	path = deps/VMA
+	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator
