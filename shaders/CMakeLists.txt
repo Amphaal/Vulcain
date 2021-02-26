@@ -7,7 +7,7 @@ file(GLOB_RECURSE GLSL_SOURCE_FILES
 
 foreach(GLSL ${GLSL_SOURCE_FILES})
     get_filename_component(FILE_NAME ${GLSL} NAME)
-    set(SPIRV ${CMAKE_CURRENT_SOURCE_DIR}/${FILE_NAME}.spv)
+    set(SPIRV ${CMAKE_CURRENT_SOURCE_DIR}/generated/${FILE_NAME}.spv)
     add_custom_command(
         OUTPUT ${SPIRV}
         COMMAND ${GLSL_VALIDATOR} -V ${GLSL} -o ${SPIRV}

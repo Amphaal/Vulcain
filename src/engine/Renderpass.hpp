@@ -25,10 +25,10 @@ namespace Vulcain {
 
 class Renderpass {
  public:
-    Renderpass(Swapchain* swapchain) : _swapchain(swapchain) {
+    Renderpass(Swapchain* swapchain) : _device(swapchain->device()) {
         //
         VkAttachmentDescription colorAttachment{};
-        colorAttachment.format = _swapchain->imageFormat;
+        colorAttachment.format = swapchain->imageFormat;
         colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
         colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -53,16 +53,20 @@ class Renderpass {
         renderPassInfo.subpassCount = 1;
         renderPassInfo.pSubpasses = &subpass;
 
-        auto result = vkCreateRenderPass(_swapchain->device()->get(), &renderPassInfo, nullptr, &_renderPass);
+        auto result = vkCreateRenderPass(_device->get(), &renderPassInfo, nullptr, &_renderPass);
         assert(result == VK_SUCCESS);
     }
 
+    VkRenderPass get() const {
+        return _renderPass;
+    }
+
     ~Renderpass() {
-        vkDestroyRenderPass(_swapchain->device()->get(), _renderPass, nullptr);
+        vkDestroyRenderPass(_device->get(), _renderPass, nullptr);
     }
  
  private:
-    Swapchain* _swapchain = nullptr;
+    Device* _device = nullptr;
     VkRenderPass _renderPass;
 };
 

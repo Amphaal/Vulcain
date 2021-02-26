@@ -76,7 +76,7 @@ target_include_directories(Vulcain PUBLIC
     target_link_libraries(Vulcain PRIVATE glm)
 
 #
-# SPIR-V Shaders
+# SPIR-V ShaderFoundry
 #
 
     add_subdirectory(shaders)

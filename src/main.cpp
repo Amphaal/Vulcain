@@ -20,8 +20,7 @@
 #include "volk.h"
 
 #include "engine/ImageViews.hpp"
-#include "engine/Shaders.hpp"
-#include "engine/Renderpass.hpp"
+#include "engine/Pipeline.hpp"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -45,11 +44,12 @@ int main() {
     Vulcain::Instance instance(&createInfo);
     Vulcain::Surface surface(&handler, &instance);
     Vulcain::Device device(&surface);
+    Vulcain::ShaderFoundry shaders(&device);
     Vulcain::Swapchain swapchain(&device);
-
     Vulcain::Renderpass renderpass(&swapchain);
-    Vulcain::Shaders shaders(&swapchain);
     Vulcain::ImageViews views(&swapchain);
+
+    Vulcain::Pipeline basic { &swapchain, &renderpass, shaders.modulesFromShaderName("basic") };
 
     return 0;
 }
