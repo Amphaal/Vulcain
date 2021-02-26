@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include "Debug.hpp"
+
 #include <GLFW/glfw3.h>
 
 #include <stdio.h>
@@ -28,17 +30,6 @@
 #include <vector>
 
 namespace Vulcain {
-
-static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
-    VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, 
-    VkDebugUtilsMessageTypeFlagsEXT messageType, 
-    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, 
-    void* pUserData
-    ) {
-    //
-    // std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
-    return VK_FALSE;
-}
 
 class AvailableExtensions {
  public:

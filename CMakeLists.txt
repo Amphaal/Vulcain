@@ -49,17 +49,20 @@ target_include_directories(Vulcain PUBLIC
 # Vulkan Loader !
 #
 
-    # standard Vulkan loader
-    # find_package(PkgConfig REQUIRED)
-    # pkg_check_modules(Vulkan REQUIRED IMPORTED_TARGET vulkan)
-    # target_link_libraries(Vulcain PRIVATE PkgConfig::Vulkan)
-
-    # optimised volk Vulkan loader
-    if (WIN32)
-        set(VOLK_STATIC_DEFINES VK_USE_PLATFORM_WIN32_KHR)
+    IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        #standard Vulkan loader
+        find_package(PkgConfig REQUIRED)
+        pkg_check_modules(Vulkan REQUIRED IMPORTED_TARGET vulkan)
+        target_link_libraries(Vulcain PRIVATE PkgConfig::Vulkan)
+    else()
+        # optimised volk Vulkan loader
+        if (WIN32)
+            set(VOLK_STATIC_DEFINES VK_USE_PLATFORM_WIN32_KHR)
+        endif()
+        add_subdirectory(deps/volk)
+        target_link_libraries(Vulcain PRIVATE volk)
+        add_compile_definitions(USES_VOLK)
     endif()
-    add_subdirectory(deps/volk)
-    target_link_libraries(Vulcain PRIVATE volk)
 
 #
 # glfw

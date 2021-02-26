@@ -18,8 +18,8 @@
             "environment": [
                 {
                     "name": "VK_LAYER_PATH",
-                    "value": "C:\\msys64\\mingw64\\lib"
-                }
+                    "value": "C:\\msys64\\mingw64\\bin"
+                },
             ]
         },
     ]

@@ -17,7 +17,7 @@
 // for further details. Graphical resources without explicit references to a
 // different license and copyright still refer to this GPL.
 
-#include "volk.h"
+#include "engine/Vulcain.h"
 
 #include "engine/ImageViews.hpp"
 #include "engine/Pipeline.hpp"
@@ -28,8 +28,11 @@
 #include <glm/mat4x4.hpp>
 
 int main() {
+    #ifdef USES_VOLK
     auto result = volkInitialize();
     assert(result == VK_SUCCESS);
+    #endif
+    
     Vulcain::WindowHandler handler;
 
     VkApplicationInfo appInfo{};

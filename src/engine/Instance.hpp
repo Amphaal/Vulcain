@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include <volk.h>
+#include "Vulcain.h"
 
 #include "InstanceCreateInfo.hpp"
 
@@ -33,7 +33,10 @@ class Instance {
         //
         auto result = vkCreateInstance(_createInfos, nullptr, &_instance);
         assert(result == VK_SUCCESS); 
+
+        #ifdef USES_VOLK
         volkLoadInstance(_instance);
+        #endif
 
         //
         _mayCreateDebugMessenger();

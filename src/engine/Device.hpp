@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include <volk.h>
+#include "Vulcain.h"
 
 #include "Surface.hpp"
 
@@ -299,7 +299,9 @@ class Device {
         assert(result == VK_SUCCESS);
         
         //
+        #ifdef USES_VOLK
         volkLoadDevice(_device);
+        #endif
     }
 };
 

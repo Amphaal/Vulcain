@@ -19,5 +19,6 @@ endforeach(GLSL)
 include(CMakeRC)
 
 cmrc_add_resource_library(shadersResources 
+    WHENCE generated
     ${SPIRV_BINARY_FILES}
 )
