@@ -48,7 +48,7 @@ class Surface {
         return _windowHandler;
     }
 
-    VkSurfaceKHR& get() {
+    VkSurfaceKHR get() {
         return _surface;
     }
 

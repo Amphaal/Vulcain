@@ -23,8 +23,6 @@
 
 #include "Surface.hpp"
 
-#include <map>
-
 namespace Vulcain {
 
 struct SwapChainSupportDetails {
@@ -69,193 +67,51 @@ struct SwapChainSupportDetails {
 
 struct PhysicalDeviceDetails {
     const VkPhysicalDevice pDevice;
+    Vulcain::Surface* surface = nullptr;
     SwapChainSupportDetails swapchainDetails;
 };
 
 class Device {
  public:
-    Device(Vulcain::Surface* surface) : _surface(surface) {
-        _getBestPhysicalDevice();
+    static auto const REQUIRED_QUEUE_TYPE = VK_QUEUE_GRAPHICS_BIT;
+    static inline const std::vector<const char*> REQUIRED_DEVICE_EXTENSIONS {
+        VK_KHR_SWAPCHAIN_EXTENSION_NAME
+    };
+
+    Device(const PhysicalDeviceDetails* pDeviceDetails) : _pDeviceDetails(pDeviceDetails) {
         _instaciateLogicalDevice();
 
         // get graphics queue
         vkGetDeviceQueue(_device, REQUIRED_QUEUE_TYPE, 0, &_graphicsQueue);
     }
 
-    VkDevice& get() {
-        return _device;
-    }
-
-    const SwapChainSupportDetails& swapchainDetails() const {
-        return _getPreferedPhysicalDevice().swapchainDetails;
-    }
-
-    Vulcain::Surface* surface() {
-        return _surface;
-    }
-
     ~Device() {
         vkDestroyDevice(_device, nullptr);
     }
 
+    //
+    //
+    //
+
+    VkDevice get() {
+        return _device;
+    }
+
+    const SwapChainSupportDetails& swapchainDetails() const {
+        return _pDeviceDetails->swapchainDetails;
+    }
+
+    Vulcain::Surface* surface() {
+        return _pDeviceDetails->surface;
+    }
+
  private:
-    Vulcain::Surface* _surface = nullptr;
+    const Vulcain::PhysicalDeviceDetails* _pDeviceDetails = nullptr;
 
     VkDevice _device;
     VkQueue _graphicsQueue;
 
-    std::multimap<int, PhysicalDeviceDetails> _pDevicesCandidates;
     float _queuePriority = 1.f;
-
-    static auto const REQUIRED_QUEUE_TYPE = VK_QUEUE_GRAPHICS_BIT;
-
-    const std::vector<const char*> REQUIRED_DEVICE_EXTENSIONS {
-        VK_KHR_SWAPCHAIN_EXTENSION_NAME
-    };
-
-    Instance* _instance() {
-        return _surface->instance();
-    }
-
-    void _getBestPhysicalDevice() {
-        // get physical devices
-        uint32_t deviceCount = 0;
-        vkEnumeratePhysicalDevices(_instance()->get(), &deviceCount, nullptr);
-        assert(deviceCount);
-        std::vector<VkPhysicalDevice> availablePDevices(deviceCount);
-        vkEnumeratePhysicalDevices(_instance()->get(), &deviceCount, availablePDevices.data());
-
-        // find score for each physical device
-        for (const auto& device : availablePDevices) {
-            PhysicalDeviceDetails pDetails {device};
-            auto score = _rateDeviceSuitability(pDetails);
-            if(!score) continue;
-            _pDevicesCandidates.insert(std::make_pair(score, pDetails));
-        }
-        assert(_pDevicesCandidates.size());
-    }
-
-    int _rateDeviceSuitability(PhysicalDeviceDetails &details) const {
-        int score = 0;
-
-        // check properties
-        VkPhysicalDeviceProperties deviceProperties;
-        VkPhysicalDeviceFeatures deviceFeatures;
-        vkGetPhysicalDeviceProperties(details.pDevice, &deviceProperties);
-        vkGetPhysicalDeviceFeatures(details.pDevice, &deviceFeatures);
-
-        // Application can't function without geometry shaders
-        if (!deviceFeatures.geometryShader) return 0;
-
-        // Discrete GPUs have a significant performance advantage
-        if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
-            score += 1000;
-        }
-
-        // Maximum possible size of textures affects graphics quality
-        score += deviceProperties.limits.maxImageDimension2D;
-
-        // check queues
-        if(!_hasPotententQueue(details.pDevice)) return 0;
-
-        // ensure device supports swapchain
-        if(!_supportsSwapchain(details)) return 0;
-
-        //
-        return score;
-    }
-
-    bool _supportsSwapchain(PhysicalDeviceDetails &details) const {
-        // get available extensions on device
-        uint32_t extensionCount;
-        vkEnumerateDeviceExtensionProperties(details.pDevice, nullptr, &extensionCount, nullptr);
-        VkExtensionProperties availableExtensions[extensionCount];
-        vkEnumerateDeviceExtensionProperties(details.pDevice, nullptr, &extensionCount, availableExtensions);
-
-        // check all required are available
-        for (const auto& required : REQUIRED_DEVICE_EXTENSIONS) {
-            bool requiredIsAvailable = false;
-            for(const auto &available : availableExtensions) {
-                if(strcmp(required, available.extensionName) == 0) {
-                    requiredIsAvailable = true;
-                    break;
-                }
-            }
-            if(!requiredIsAvailable) return false;
-        }
-
-        //
-        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(details.pDevice, _surface->get(), &details.swapchainDetails.capabilities);
-
-        //
-        {
-            uint32_t formatCount;
-            vkGetPhysicalDeviceSurfaceFormatsKHR(details.pDevice, _surface->get(), &formatCount, nullptr);
-            if (formatCount != 0) {
-                details.swapchainDetails.formats.resize(formatCount);
-                vkGetPhysicalDeviceSurfaceFormatsKHR(
-                    details.pDevice, 
-                    _surface->get(), 
-                    &formatCount, 
-                    details.swapchainDetails.formats.data()
-                );
-            }
-            if(!formatCount) return false;
-        }
-
-        //
-        {
-            uint32_t presentModeCount;
-            vkGetPhysicalDeviceSurfacePresentModesKHR(details.pDevice, _surface->get(), &presentModeCount, nullptr);
-            if (presentModeCount != 0) {
-                details.swapchainDetails.presentModes.resize(presentModeCount);
-                vkGetPhysicalDeviceSurfacePresentModesKHR(
-                    details.pDevice, 
-                    _surface->get(), 
-                    &presentModeCount, 
-                    details.swapchainDetails.presentModes.data()
-                );
-            }
-            if(!presentModeCount) return false;
-        }
-
-        //
-        return true;
-    }
-
-    // TODO(amphaal) handle multiple queues ? (https://vulkan-tutorial.com/code/05_window_surface.cpp)
-    bool _hasPotententQueue(const VkPhysicalDevice &pDevice) const {
-        bool hasPotentQueue = false;
-        
-        // get queues
-        uint32_t queueFamilyCount = 0;
-        vkGetPhysicalDeviceQueueFamilyProperties(pDevice, &queueFamilyCount, nullptr);
-        std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
-        vkGetPhysicalDeviceQueueFamilyProperties(pDevice, &queueFamilyCount, queueFamilies.data());
-
-
-        // make sure this physical device can do graphics
-        for (const auto& queueFamily : queueFamilies) {
-            // check if required queue is handled
-            auto requiredQueueHandled = queueFamily.queueFlags & REQUIRED_QUEUE_TYPE;
-            if (!requiredQueueHandled) continue;
-            
-            // check if surface can do presentation
-            VkBool32 presentSupport = false;
-            vkGetPhysicalDeviceSurfaceSupportKHR(pDevice, REQUIRED_QUEUE_TYPE, _surface->get(), &presentSupport);
-            if (!presentSupport) continue;
-
-            //
-            hasPotentQueue = true;
-            break;
-        }
-
-        return hasPotentQueue;
-    }
-
-    const PhysicalDeviceDetails& _getPreferedPhysicalDevice() const {
-        return _pDevicesCandidates.rbegin()->second;
-    }
     
     void _instaciateLogicalDevice() {
         // instanciate graphics queue
@@ -280,7 +136,7 @@ class Device {
             deviceCreateInfo.pEnabledFeatures = &deviceFeatures;
 
             //
-            if(auto createInfo = _instance()->createInfo(); createInfo->enabledLayerCount) {
+            if(auto createInfo = surface()->instance()->createInfo(); createInfo->enabledLayerCount) {
                 deviceCreateInfo.enabledLayerCount = createInfo->enabledLayerCount;
                 deviceCreateInfo.ppEnabledLayerNames = createInfo->ppEnabledLayerNames;
             }
@@ -291,7 +147,7 @@ class Device {
 
         // create device
         auto result = vkCreateDevice(
-            _getPreferedPhysicalDevice().pDevice, 
+            _pDeviceDetails->pDevice, 
             &deviceCreateInfo, 
             nullptr, 
             &_device

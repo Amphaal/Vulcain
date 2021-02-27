@@ -42,6 +42,15 @@ class Instance {
         _mayCreateDebugMessenger();
     }
 
+    std::vector<VkPhysicalDevice> getPhysicalDevices() const {
+        uint32_t deviceCount = 0;
+        vkEnumeratePhysicalDevices(_instance, &deviceCount, nullptr);
+        assert(deviceCount);
+        std::vector<VkPhysicalDevice> availablePDevices(deviceCount);
+        vkEnumeratePhysicalDevices(_instance, &deviceCount, availablePDevices.data());
+        return availablePDevices;
+    }
+
     ~Instance() {
         //
         if(_debugMessenger) {
@@ -54,7 +63,7 @@ class Instance {
         vkDestroyInstance(_instance, nullptr);
     }
 
-    VkInstance& get() {
+    VkInstance get() {
         return _instance;
     }
 

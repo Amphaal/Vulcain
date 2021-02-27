@@ -21,6 +21,7 @@
 
 #include "engine/ImageViews.hpp"
 #include "engine/Pipeline.hpp"
+#include "engine/DevicePicker.hpp"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -46,12 +47,11 @@ int main() {
     Vulcain::InstanceCreateInfo createInfo(&appInfo);
     Vulcain::Instance instance(&createInfo);
     Vulcain::Surface surface(&handler, &instance);
-    Vulcain::Device device(&surface);
+    auto device = Vulcain::DevicePicker::getBestDevice(&surface);
     Vulcain::ShaderFoundry shaders(&device);
     Vulcain::Swapchain swapchain(&device);
     Vulcain::Renderpass renderpass(&swapchain);
     Vulcain::ImageViews views(&swapchain, &renderpass);
-
     Vulcain::Pipeline basic { &swapchain, &renderpass, shaders.modulesFromShaderName("basic") };
 
     return 0;
