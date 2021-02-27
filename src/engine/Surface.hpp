@@ -40,11 +40,11 @@ class Surface {
         if(_instance) vkDestroySurfaceKHR(_instance->get(), _surface, nullptr);
     }
 
-    Vulcain::Instance* instance() const {
+    Instance* instance() const {
         return _instance;
     }
 
-    Vulcain::WindowHandler* window() const {
+    WindowHandler* window() const {
         return _windowHandler;
     }
 
@@ -54,8 +54,8 @@ class Surface {
 
  private:
     VkSurfaceKHR _surface;
-    Vulcain::Instance* _instance = nullptr;
-    Vulcain::WindowHandler* _windowHandler = nullptr;
+    Instance* _instance = nullptr;
+    WindowHandler* _windowHandler = nullptr;
 };
 
 }; // namespace Vulcain

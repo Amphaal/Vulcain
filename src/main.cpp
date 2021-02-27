@@ -19,7 +19,7 @@
 
 #include "engine/Vulcain.h"
 
-#include "engine/ImageViews.hpp"
+#include "engine/CommandPool.hpp"
 #include "engine/Pipeline.hpp"
 #include "engine/DevicePicker.hpp"
 
@@ -51,8 +51,9 @@ int main() {
     Vulcain::ShaderFoundry shaders(&device);
     Vulcain::Swapchain swapchain(&device);
     Vulcain::Renderpass renderpass(&swapchain);
-    Vulcain::ImageViews views(&swapchain, &renderpass);
-    Vulcain::Pipeline basic { &swapchain, &renderpass, shaders.modulesFromShaderName("basic") };
+    auto basicPipeline = Vulcain::Pipeline { &renderpass, shaders.modulesFromShaderName("basic") };
+    Vulcain::ImageViews views(&renderpass);
+    Vulcain::CommandPool pool(&views);
 
     return 0;
 }

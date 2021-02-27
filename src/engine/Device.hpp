@@ -67,7 +67,7 @@ struct SwapChainSupportDetails {
 
 struct PhysicalDeviceDetails {
     const VkPhysicalDevice pDevice;
-    Vulcain::Surface* surface = nullptr;
+    Surface* surface = nullptr;
     SwapChainSupportDetails swapchainDetails;
 };
 
@@ -93,20 +93,24 @@ class Device {
     //
     //
 
-    VkDevice get() {
+    VkDevice get() const {
         return _device;
+    }
+
+    VkQueue queue() const {
+        return _graphicsQueue;
     }
 
     const SwapChainSupportDetails& swapchainDetails() const {
         return _pDeviceDetails->swapchainDetails;
     }
 
-    Vulcain::Surface* surface() {
+    Surface* surface() {
         return _pDeviceDetails->surface;
     }
 
  private:
-    const Vulcain::PhysicalDeviceDetails* _pDeviceDetails = nullptr;
+    const PhysicalDeviceDetails* _pDeviceDetails = nullptr;
 
     VkDevice _device;
     VkQueue _graphicsQueue;

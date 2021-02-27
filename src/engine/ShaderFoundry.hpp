@@ -138,7 +138,7 @@ class ShaderFoundry {
 
     std::vector<VkShaderModule> _modules;
     ModulesByPipeline _pipelines;
-    Vulcain::Device* _device = nullptr;
+    Device* _device = nullptr;
 };
 
 }; // namespace Vulcain

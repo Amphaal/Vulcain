@@ -17,7 +17,7 @@
 // for further details. Graphical resources without explicit references to a
 // different license and copyright still refer to this GPL.
 
-#pragma once
+#pragma onceZ
 
 #include "Renderpass.hpp"
 
@@ -25,12 +25,15 @@ namespace Vulcain {
 
 class ImageViews {
  public:
-    ImageViews(Swapchain* swapchain, Renderpass* renderpass) : _device(swapchain->device()) {
+    ImageViews(Renderpass* renderpass) : _renderpass(renderpass) {
         //
+        auto swapchain = renderpass->swapchain();
         auto swapChainImages = swapchain->images();
         
-        _views.resize(swapChainImages.size());
-        _fbs.resize(swapChainImages.size());
+        //
+        _c = swapChainImages.size();
+        _views.resize(_c);
+        _fbs.resize(_c);
 
         //
         for(size_t i = 0; i < swapChainImages.size(); i++) {
@@ -39,19 +42,33 @@ class ImageViews {
         }
     }
 
+    // how many images handled
+    int count() const {
+        return _c;
+    }
+
+    Renderpass* renderpass() const {
+        return _renderpass;
+    }
+
     ~ImageViews() {
         //
         for (auto framebuffer : _fbs) {
-            vkDestroyFramebuffer(_device->get(), framebuffer, nullptr);
+            vkDestroyFramebuffer(_renderpass->swapchain()->device()->get(), framebuffer, nullptr);
         }
 
         //
         for (auto imageView : _views) {
-            vkDestroyImageView(_device->get(), imageView, nullptr);
+            vkDestroyImageView(_renderpass->swapchain()->device()->get(), imageView, nullptr);
         }
     }
 
  private:
+    std::vector<VkImageView> _views;
+    std::vector<VkFramebuffer> _fbs;
+    Renderpass* _renderpass = nullptr;
+    int _c = 0;
+
     void _pushImageView(Swapchain* swapchain, VkImage swapChainImage, VkImageView* into) {
         //
         VkImageViewCreateInfo createInfo{};
@@ -70,7 +87,7 @@ class ImageViews {
         createInfo.subresourceRange.layerCount = 1;
 
         //
-        auto result = vkCreateImageView(_device->get(), &createInfo, nullptr, into);
+        auto result = vkCreateImageView(_renderpass->swapchain()->device()->get(), &createInfo, nullptr, into);
         assert(result == VK_SUCCESS);
     }
 
@@ -89,13 +106,9 @@ class ImageViews {
         framebufferInfo.layers = 1;
 
         //
-        auto result = vkCreateFramebuffer(_device->get(), &framebufferInfo, nullptr, into);
+        auto result = vkCreateFramebuffer(_renderpass->swapchain()->device()->get(), &framebufferInfo, nullptr, into);
         assert(result == VK_SUCCESS);
     }
-
-    std::vector<VkImageView> _views;
-    std::vector<VkFramebuffer> _fbs;
-    Device* _device = nullptr;
 };
 
 }; // namespace Vulcain

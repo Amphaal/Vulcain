@@ -27,7 +27,7 @@ namespace Vulcain {
 
 class DevicePicker {
  public:
-    static Device getBestDevice(Vulcain::Surface* surface) {
+    static Device getBestDevice(Surface* surface) {
         _mayRatePhysicalDevice(surface);
         return { &_getPreferedPhysicalDevice() };
     };
@@ -35,7 +35,7 @@ class DevicePicker {
  private:
     static inline std::multimap<int, PhysicalDeviceDetails> _pDevicesCandidates;
 
-     static void _mayRatePhysicalDevice(Vulcain::Surface* surface) {
+     static void _mayRatePhysicalDevice(Surface* surface) {
         // no need to re-rate
         if(_pDevicesCandidates.size()) return;
         
@@ -63,7 +63,7 @@ class DevicePicker {
     //
     //
 
-    static int _rateDeviceSuitability(PhysicalDeviceDetails &details, Vulcain::Surface* surface) {
+    static int _rateDeviceSuitability(PhysicalDeviceDetails &details, Surface* surface) {
         int score = 0;
 
         // check properties
@@ -93,7 +93,7 @@ class DevicePicker {
         return score;
     }
 
-    static bool _supportsSwapchain(PhysicalDeviceDetails &details, Vulcain::Surface* surface) {
+    static bool _supportsSwapchain(PhysicalDeviceDetails &details, Surface* surface) {
         // get available extensions on device
         uint32_t extensionCount;
         vkEnumerateDeviceExtensionProperties(details.pDevice, nullptr, &extensionCount, nullptr);
@@ -152,7 +152,7 @@ class DevicePicker {
     }
 
     // TODO(amphaal) handle multiple queues ? (https://vulkan-tutorial.com/code/05_window_surface.cpp)
-    static bool _hasPotententQueue(const VkPhysicalDevice &pDevice, Vulcain::Surface* surface) {
+    static bool _hasPotententQueue(const VkPhysicalDevice &pDevice, Surface* surface) {
         bool hasPotentQueue = false;
         
         // get queues

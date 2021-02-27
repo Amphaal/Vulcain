@@ -27,9 +27,9 @@ namespace Vulcain {
 
 class Pipeline {
  public:
-    Pipeline(Swapchain* swapchain, Renderpass* renderpass, const ShaderFoundry::Modules& modules) : _device(swapchain->device()) {
+    Pipeline(Renderpass* renderpass, const ShaderFoundry::Modules& modules) : _device(renderpass->swapchain()->device()) {
         _createLayout();
-        _createPipeline(swapchain, renderpass, modules);
+        _createPipeline(renderpass->swapchain(), renderpass, modules);
     }
 
     ~Pipeline() {
