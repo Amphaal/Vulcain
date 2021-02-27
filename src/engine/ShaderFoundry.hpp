@@ -104,7 +104,7 @@ class ShaderFoundry {
             createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
             createInfo.stage = stageFlag;
             createInfo.module = module;
-            createInfo.pName = pipeline->first.c_str();
+            createInfo.pName = "main";
 
             //
             stages.emplace(stageFlag, createInfo);

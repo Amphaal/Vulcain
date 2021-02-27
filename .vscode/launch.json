@@ -18,8 +18,13 @@
             "environment": [
                 {
                     "name": "VK_LAYER_PATH",
-                    "value": "C:\\msys64\\mingw64\\bin"
+                    // "value": "C:\\msys64\\mingw64\\bin",
+                    "value": "C:\\VulkanSDK\\1.2.162.1\\Bin"
                 },
+                // {
+                //     "name": "VK_LOADER_DEBUG",
+                //     "value": "all",
+                // }
             ]
         },
     ]
