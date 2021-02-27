@@ -109,6 +109,7 @@
         "semaphore": "cpp",
         "stack": "cpp",
         "span": "cpp",
-        "version": "cpp"
+        "version": "cpp",
+        "__functional_03": "cpp"
     }
 }

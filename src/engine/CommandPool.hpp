@@ -19,6 +19,8 @@
 
 #pragma onceZ
 
+#include <functional>
+
 #include "ImageViews.hpp"
 
 namespace Vulcain {
@@ -31,7 +33,42 @@ class CommandPool {
     }
 
     ~CommandPool() {
-        vkDestroyCommandPool(_device(), _commandPool, nullptr);
+        vkDestroyCommandPool(_device()->get(), _commandPool, nullptr);
+    }
+
+    void record(std::function<void(VkCommandBuffer)> commands) {
+        for(size_t i = 0; i < _commandBuffers.size(); i++) {
+            //
+            auto &commandBuffer = _commandBuffers[i];
+            
+            //
+            VkCommandBufferBeginInfo beginInfo{};
+            beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+            auto resultBegin = vkBeginCommandBuffer(commandBuffer, &beginInfo);
+            assert(resultBegin == VK_SUCCESS);
+
+            //
+            VkRenderPassBeginInfo renderPassInfo{};
+            renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+            renderPassInfo.renderPass = _views->renderpass()->get();
+            renderPassInfo.framebuffer = _views->framebuffer(i);
+            renderPassInfo.renderArea.offset = {0, 0};
+            renderPassInfo.renderArea.extent = _views->renderpass()->swapchain()->imageExtent;
+
+            VkClearValue clearColor = {0.0f, 0.0f, 0.0f, 1.0f};
+            renderPassInfo.clearValueCount = 1;
+            renderPassInfo.pClearValues = &clearColor;
+
+                vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+                    //
+                    commands(commandBuffer);
+                    //
+                vkCmdEndRenderPass(commandBuffer);
+
+            //
+            auto resultEnd = vkEndCommandBuffer(commandBuffer);
+            assert(resultEnd == VK_SUCCESS);
+        }
     }
 
  private:
@@ -39,17 +76,17 @@ class CommandPool {
     std::vector<VkCommandBuffer> _commandBuffers;
     ImageViews* _views = nullptr;
 
-    VkDevice _device() const {
-        return _views->renderpass()->swapchain()->device()->get();
+    Device* _device() const {
+        return _views->renderpass()->swapchain()->device();
     }
 
     void _createCommandPool() {
         //
         VkCommandPoolCreateInfo poolInfo{};
         poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-        poolInfo.queueFamilyIndex = Vulcain::Device::REQUIRED_QUEUE_TYPE;
+        poolInfo.queueFamilyIndex = _device()->queueIndex();
         poolInfo.flags = 0; // Optional
-        auto result = vkCreateCommandPool(_device(), &poolInfo, nullptr, &_commandPool);
+        auto result = vkCreateCommandPool(_device()->get(), &poolInfo, nullptr, &_commandPool);
         assert(result == VK_SUCCESS);
     }
 
@@ -65,7 +102,7 @@ class CommandPool {
         allocInfo.commandBufferCount = (uint32_t) _commandBuffers.size();
 
         //
-        auto result = vkAllocateCommandBuffers(_device(), &allocInfo, _commandBuffers.data());
+        auto result = vkAllocateCommandBuffers(_device()->get(), &allocInfo, _commandBuffers.data());
         assert(result == VK_SUCCESS);
     }
 };

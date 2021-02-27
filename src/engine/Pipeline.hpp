@@ -32,6 +32,10 @@ class Pipeline {
         _createPipeline(renderpass->swapchain(), renderpass, modules);
     }
 
+    VkPipeline get() const {
+        return _pipeline;
+    }
+
     ~Pipeline() {
         vkDestroyPipeline(_device->get(), _pipeline, nullptr);
         vkDestroyPipelineLayout(_device->get(), _layout, nullptr);

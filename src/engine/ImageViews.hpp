@@ -51,6 +51,10 @@ class ImageViews {
         return _renderpass;
     }
 
+    VkFramebuffer framebuffer(int index) const {
+        return _fbs[index];
+    }
+
     ~ImageViews() {
         //
         for (auto framebuffer : _fbs) {

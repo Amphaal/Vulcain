@@ -84,7 +84,7 @@ class DevicePicker {
         score += deviceProperties.limits.maxImageDimension2D;
 
         // check queues
-        if(!_hasPotententQueue(details.pDevice, surface)) return 0;
+        if(!_hasPotententQueue(details, surface)) return 0;
 
         // ensure device supports swapchain
         if(!_supportsSwapchain(details, surface)) return 0;
@@ -151,34 +151,32 @@ class DevicePicker {
         return true;
     }
 
-    // TODO(amphaal) handle multiple queues ? (https://vulkan-tutorial.com/code/05_window_surface.cpp)
-    static bool _hasPotententQueue(const VkPhysicalDevice &pDevice, Surface* surface) {
-        bool hasPotentQueue = false;
-        
+    // returns potent queue index
+    static bool _hasPotententQueue(PhysicalDeviceDetails &details, Surface* surface) {
         // get queues
         uint32_t queueFamilyCount = 0;
-        vkGetPhysicalDeviceQueueFamilyProperties(pDevice, &queueFamilyCount, nullptr);
+        vkGetPhysicalDeviceQueueFamilyProperties(details.pDevice, &queueFamilyCount, nullptr);
         std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
-        vkGetPhysicalDeviceQueueFamilyProperties(pDevice, &queueFamilyCount, queueFamilies.data());
-
+        vkGetPhysicalDeviceQueueFamilyProperties(details.pDevice, &queueFamilyCount, queueFamilies.data());
 
         // make sure this physical device can do graphics
-        for (const auto& queueFamily : queueFamilies) {
-            // check if required queue is handled
-            auto requiredQueueHandled = queueFamily.queueFlags & Device::REQUIRED_QUEUE_TYPE;
+        for (size_t i = 0; i < queueFamilies.size(); i++) {
+            // check if graphics queue is handled
+            auto requiredQueueHandled = queueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT;
             if (!requiredQueueHandled) continue;
             
-            // check if surface can do presentation
+            // check if queue can do presentation
             VkBool32 presentSupport = false;
-            vkGetPhysicalDeviceSurfaceSupportKHR(pDevice, Device::REQUIRED_QUEUE_TYPE, surface->get(), &presentSupport);
+            vkGetPhysicalDeviceSurfaceSupportKHR(details.pDevice, i, surface->get(), &presentSupport);
             if (!presentSupport) continue;
 
-            //
-            hasPotentQueue = true;
-            break;
+            // set this potent queue
+            details.presentationAndGraphicsQueueIndex = i;
+            return true;
         }
 
-        return hasPotentQueue;
+        // none acceptable found !
+        return false;
     }
 };
 

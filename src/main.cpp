@@ -40,7 +40,7 @@ int main() {
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     appInfo.pApplicationName = "Hello Triangle";
     appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-    appInfo.pEngineName = "No Engine";
+    appInfo.pEngineName = "Vulcain";
     appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
     appInfo.apiVersion = VK_API_VERSION_1_0;
 
@@ -48,12 +48,20 @@ int main() {
     Vulcain::Instance instance(&createInfo);
     Vulcain::Surface surface(&handler, &instance);
     auto device = Vulcain::DevicePicker::getBestDevice(&surface);
-    Vulcain::ShaderFoundry shaders(&device);
+    
+    Vulcain::ShaderFoundry foundry(&device);
+
     Vulcain::Swapchain swapchain(&device);
     Vulcain::Renderpass renderpass(&swapchain);
-    auto basicPipeline = Vulcain::Pipeline { &renderpass, shaders.modulesFromShaderName("basic") };
     Vulcain::ImageViews views(&renderpass);
     Vulcain::CommandPool pool(&views);
+
+    auto basicPipeline = Vulcain::Pipeline { &renderpass, foundry.modulesFromShaderName("basic") };
+
+    pool.record([&basicPipeline](VkCommandBuffer cmdBuf) {
+        vkCmdBindPipeline(cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, basicPipeline.get());
+        vkCmdDraw(cmdBuf, 3, 1, 0, 0);
+    });
 
     return 0;
 }
