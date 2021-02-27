@@ -50,7 +50,7 @@ int main() {
     Vulcain::ShaderFoundry shaders(&device);
     Vulcain::Swapchain swapchain(&device);
     Vulcain::Renderpass renderpass(&swapchain);
-    Vulcain::ImageViews views(&swapchain);
+    Vulcain::ImageViews views(&swapchain, &renderpass);
 
     Vulcain::Pipeline basic { &swapchain, &renderpass, shaders.modulesFromShaderName("basic") };
 

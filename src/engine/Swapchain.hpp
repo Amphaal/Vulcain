@@ -70,7 +70,7 @@ class Swapchain : public VkSwapchainCreateInfoKHR {
         return _device;
     }
 
-    const std::vector<VkImage>& images() const {
+    std::vector<VkImage> images() const {
         return _swapChainImages;
     }
 
