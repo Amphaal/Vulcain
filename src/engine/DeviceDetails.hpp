@@ -50,12 +50,12 @@ struct SwapChainSupportDetails {
         return VK_PRESENT_MODE_FIFO_KHR;
     }
 
-    VkExtent2D getSwapExtent(WindowHandler* windowHandler) const {
+    VkExtent2D getSwapExtent(GlfwWindow* GlfwWindow) const {
         if (capabilities.currentExtent.width != UINT32_MAX) {
             return capabilities.currentExtent;
         } else {
             int width, height;
-            auto actualExtent = windowHandler->framebufferSize();
+            auto actualExtent = GlfwWindow->framebufferSize();
 
             actualExtent.width = std::max(capabilities.minImageExtent.width, std::min(capabilities.maxImageExtent.width, actualExtent.width));
             actualExtent.height = std::max(capabilities.minImageExtent.height, std::min(capabilities.maxImageExtent.height, actualExtent.height));

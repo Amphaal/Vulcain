@@ -25,15 +25,22 @@ namespace Vulcain {
 
 class Renderer {
  public:
-    Renderer(CommandPool* pool) : _pool(pool) {
+    Renderer(CommandPool* pool, Vulcain::GlfwWindow* window) : _pool(pool) {
         _createSyncObjects();
+        
+        //
+        window->bindFramebufferChanges(&_hasFramebufferResized);
     }
 
     void draw() {
+        // wait fences from previous draw call
         vkWaitForFences(_device()->get(), 1, &_inFlightFences[_currentFrame], VK_TRUE, UINT64_MAX);
 
         uint32_t imageIndex;
-        vkAcquireNextImageKHR(
+        VkResult result;
+
+        // acquire image
+        result = vkAcquireNextImageKHR(
             _device()->get(), 
             _swapchain()->get(), 
             UINT64_MAX, 
@@ -42,11 +49,21 @@ class Renderer {
             &imageIndex
         );
 
+        // if swapchain is outdated
+        if(result == VK_ERROR_OUT_OF_DATE_KHR) {
+            _regenerateSwapChain();
+            return;
+        }
+        // still allow submoptimal swapchain
+        assert(result == VK_SUCCESS || result == VK_SUBOPTIMAL_KHR);
+
+        // if has an image in fight on index, wait for it to be processed
         if (_imagesInFlight[imageIndex] != VK_NULL_HANDLE) {
             vkWaitForFences(_device()->get(), 1, &_imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
         }
         _imagesInFlight[imageIndex] = _inFlightFences[_currentFrame];
 
+        //prepare submission
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
@@ -66,7 +83,7 @@ class Renderer {
 
         vkResetFences(_device()->get(), 1, &_inFlightFences[_currentFrame]);
 
-        auto result = vkQueueSubmit(_device()->queue(), 1, &submitInfo, VK_NULL_HANDLE);
+        result = vkQueueSubmit(_device()->queue(), 1, &submitInfo, VK_NULL_HANDLE);
         assert(result == VK_SUCCESS);
 
         VkPresentInfoKHR presentInfo{};
@@ -80,9 +97,18 @@ class Renderer {
         presentInfo.pImageIndices = &imageIndex;
         presentInfo.pResults = nullptr; // Optional
 
-        vkQueuePresentKHR(_device()->queue(), &presentInfo);
+        // present queue results
+        result = vkQueuePresentKHR(_device()->queue(), &presentInfo);
 
-        //
+        // check if framebuffer has been resized or swapchain image size suboptimal
+        if(result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || _hasFramebufferResized) {
+            _hasFramebufferResized = false;
+            _regenerateSwapChain();
+        } else {
+            assert(result == VK_SUCCESS);
+        }
+
+        // update current frame
         _currentFrame = (_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
     }
 
@@ -106,6 +132,8 @@ class Renderer {
     std::vector<VkSemaphore> _renderFinishedSemaphores;
     std::vector<VkFence> _inFlightFences;
     std::vector<VkFence> _imagesInFlight;
+
+    std::atomic<bool> _hasFramebufferResized;
 
     CommandPool* _pool = nullptr;
 
@@ -140,6 +168,10 @@ class Renderer {
 
     Swapchain* _swapchain() const {
         return _pool->views()->renderpass()->swapchain();
+    }
+
+    void _regenerateSwapChain() {
+
     }
 };
 

@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include <atomic>
+
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
@@ -27,21 +29,21 @@
 
 namespace Vulcain {
 
-class WindowHandler {
+class GlfwWindow {
  public:    
-    WindowHandler() {
+    GlfwWindow() {
         //
         glfwInit();
-        _inited = true;
 
         //
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         _window = glfwCreateWindow(800, 600, "Vulkan window", nullptr, nullptr);
+        glfwSetWindowUserPointer(_window, this);
     }
 
-    ~WindowHandler() {
+    ~GlfwWindow() {
         if(_window) glfwDestroyWindow(_window);
-        if(_inited) glfwTerminate();
+        glfwTerminate();
     }
 
     void waitForWindowEvents() {
@@ -52,6 +54,17 @@ class WindowHandler {
 
     HWND handle() {
         return glfwGetWin32Window(_window);
+    }
+
+    void bindFramebufferChanges(std::atomic<bool>* framebufferChangedFlag) {
+        //
+        _framebufferChangedFlag = framebufferChangedFlag;
+
+        //
+        glfwSetFramebufferSizeCallback(_window, [](GLFWwindow* window, int width, int height){
+            auto handler = reinterpret_cast<GlfwWindow*>(glfwGetWindowUserPointer(window));
+            *handler->_framebufferChangedFlag = true;
+        });
     }
 
     VkExtent2D framebufferSize() {
@@ -66,7 +79,8 @@ class WindowHandler {
 
  private:
     GLFWwindow* _window = nullptr;
-    bool _inited = false;
+
+    std::atomic<bool>* _framebufferChangedFlag = nullptr;
 };
 
 }; // namespace Vulcain

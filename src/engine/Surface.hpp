@@ -19,17 +19,17 @@
 
 #pragma once
 
-#include "WindowHandler.hpp"
+#include "GlfwWindow.hpp"
 #include "Instance.hpp"
 
 namespace Vulcain {
 
 class Surface {
  public:    
-    Surface(WindowHandler* windowHandler, Instance* instance) : _instance(instance), _windowHandler(windowHandler) {
+    Surface(GlfwWindow* GlfwWindow, Instance* instance) : _instance(instance), _GLFWWindow(GlfwWindow) {
         VkWin32SurfaceCreateInfoKHR createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-        createInfo.hwnd = windowHandler->handle();
+        createInfo.hwnd = GlfwWindow->handle();
         createInfo.hinstance = GetModuleHandle(nullptr);
 
         auto result = vkCreateWin32SurfaceKHR(_instance->get(), &createInfo, nullptr, &_surface);
@@ -44,8 +44,8 @@ class Surface {
         return _instance;
     }
 
-    WindowHandler* window() const {
-        return _windowHandler;
+    GlfwWindow* window() const {
+        return _GLFWWindow;
     }
 
     VkSurfaceKHR get() {
@@ -55,7 +55,7 @@ class Surface {
  private:
     VkSurfaceKHR _surface;
     Instance* _instance = nullptr;
-    WindowHandler* _windowHandler = nullptr;
+    GlfwWindow* _GLFWWindow = nullptr;
 };
 
 }; // namespace Vulcain

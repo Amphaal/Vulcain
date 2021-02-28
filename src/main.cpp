@@ -34,7 +34,7 @@ int main() {
     assert(result == VK_SUCCESS);
     #endif
     
-    Vulcain::WindowHandler handler;
+    Vulcain::GlfwWindow window;
 
     VkApplicationInfo appInfo{};
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -46,7 +46,7 @@ int main() {
 
     Vulcain::InstanceCreateInfo createInfo(&appInfo);
     Vulcain::Instance instance(&createInfo);
-    Vulcain::Surface surface(&handler, &instance);
+    Vulcain::Surface surface(&window, &instance);
     auto device = Vulcain::DevicePicker::getBestDevice(&surface);
     
     Vulcain::ShaderFoundry foundry(&device);
@@ -63,7 +63,7 @@ int main() {
         vkCmdDraw(cmdBuf, 3, 1, 0, 0);
     });
 
-    Vulcain::Renderer renderer(&pool);
+    Vulcain::Renderer renderer(&pool, &window);
     renderer.draw();
 
     return 0;
