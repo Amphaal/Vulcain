@@ -19,43 +19,37 @@
 
 #pragma once
 
-#include "GlfwWindow.h"
-#include "Instance.hpp"
+#include "IDrawer.h"
+#include "CommandPool.hpp"
 
 namespace Vulcain {
 
-class Surface {
- public:    
-    Surface(GlfwWindow* GlfwWindow, Instance* instance) : _instance(instance), _GLFWWindow(GlfwWindow) {
-        VkWin32SurfaceCreateInfoKHR createInfo{};
-        createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-        createInfo.hwnd = GlfwWindow->handle();
-        createInfo.hinstance = GetModuleHandle(nullptr);
+class Renderer : public IDrawer {
+ public:
+    Renderer(CommandPool* pool, Vulcain::GlfwWindow* window);
+    ~Renderer();
 
-        auto result = vkCreateWin32SurfaceKHR(_instance->get(), &createInfo, nullptr, &_surface);
-        assert(result == VK_SUCCESS);
-    }
-
-    ~Surface() {
-        if(_instance) vkDestroySurfaceKHR(_instance->get(), _surface, nullptr);
-    }
-
-    Instance* instance() const {
-        return _instance;
-    }
-
-    GlfwWindow* window() const {
-        return _GLFWWindow;
-    }
-
-    VkSurfaceKHR get() {
-        return _surface;
-    }
+    void draw() final;
 
  private:
-    VkSurfaceKHR _surface;
-    Instance* _instance = nullptr;
-    GlfwWindow* _GLFWWindow = nullptr;
+    static const int MAX_FRAMES_IN_FLIGHT = 2;
+    size_t _currentFrame = 0;
+
+    std::vector<VkSemaphore> _imageAvailableSemaphores;
+    std::vector<VkSemaphore> _renderFinishedSemaphores;
+    std::vector<VkFence> _inFlightFences;
+    std::vector<VkFence> _imagesInFlight;
+
+    std::atomic<bool> _hasFramebufferResized;
+
+    CommandPool* _pool = nullptr;
+
+    void _createSyncObjects();
+
+    Device* _device() const;
+    Swapchain* _swapchain() const;
+
+    void _regenerateSwapChain();
 };
 
 }; // namespace Vulcain

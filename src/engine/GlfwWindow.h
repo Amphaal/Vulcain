@@ -19,43 +19,43 @@
 
 #pragma once
 
-#include "GlfwWindow.h"
-#include "Instance.hpp"
+#include <atomic>
+#include <iostream>
+
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
+
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <GLFW/glfw3native.h>
+
+#include "IDrawer.h"
 
 namespace Vulcain {
 
-class Surface {
- public:    
-    Surface(GlfwWindow* GlfwWindow, Instance* instance) : _instance(instance), _GLFWWindow(GlfwWindow) {
-        VkWin32SurfaceCreateInfoKHR createInfo{};
-        createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-        createInfo.hwnd = GlfwWindow->handle();
-        createInfo.hinstance = GetModuleHandle(nullptr);
+class Renderer;
 
-        auto result = vkCreateWin32SurfaceKHR(_instance->get(), &createInfo, nullptr, &_surface);
-        assert(result == VK_SUCCESS);
-    }
+class GlfwWindow {
+ public:   
+    friend class Renderer;
 
-    ~Surface() {
-        if(_instance) vkDestroySurfaceKHR(_instance->get(), _surface, nullptr);
-    }
+    GlfwWindow();
+    ~GlfwWindow();
 
-    Instance* instance() const {
-        return _instance;
-    }
+    void poolEventsAndDraw();
 
-    GlfwWindow* window() const {
-        return _GLFWWindow;
-    }
+    HWND handle();
 
-    VkSurfaceKHR get() {
-        return _surface;
-    }
+    VkExtent2D framebufferSize();
+ 
+ protected:
+    void _bindDrawer(IDrawer* drawer);
+    void _bindFramebufferChanges(std::atomic<bool>* framebufferChangedFlag);
 
  private:
-    VkSurfaceKHR _surface;
-    Instance* _instance = nullptr;
-    GlfwWindow* _GLFWWindow = nullptr;
+    GLFWwindow* _window = nullptr;
+
+    std::atomic<bool>* _framebufferChangedFlag = nullptr;
+    IDrawer* _drawer = nullptr;
 };
 
 }; // namespace Vulcain

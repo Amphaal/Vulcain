@@ -19,7 +19,7 @@
 
 #include "engine/Vulcain.h"
 
-#include "engine/Renderer.hpp"
+#include "engine/Renderer.h"
 #include "engine/Pipeline.hpp"
 #include "engine/DevicePicker.hpp"
 
@@ -64,7 +64,7 @@ int main() {
     });
 
     Vulcain::Renderer renderer(&pool, &window);
-    renderer.draw();
+    window.poolEventsAndDraw();
 
     return 0;
 }

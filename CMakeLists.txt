@@ -34,6 +34,8 @@ set(CMAKE_C_STANDARD 11)
 #############
 
 add_executable(Vulcain 
+    src/engine/Renderer.cpp
+    src/engine/GlfwWindow.cpp
     src/main.cpp
 )
 
