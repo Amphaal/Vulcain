@@ -66,6 +66,10 @@ class Swapchain : public VkSwapchainCreateInfoKHR {
         vkGetSwapchainImagesKHR(_device->get(), _swapChain, &imageCount, _swapChainImages.data());
     }
 
+    VkSwapchainKHR get() const {
+        return _swapChain;
+    }
+
     Device* device() const {
         return _device;
     }

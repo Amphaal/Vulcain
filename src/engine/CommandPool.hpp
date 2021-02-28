@@ -71,6 +71,14 @@ class CommandPool {
         }
     }
 
+    ImageViews* views() const {
+        return _views;
+    }
+
+    VkCommandBuffer commandBuffer(int index) const {
+        return _commandBuffers[index];
+    }
+
  private:
     VkCommandPool _commandPool;
     std::vector<VkCommandBuffer> _commandBuffers;

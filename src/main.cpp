@@ -19,7 +19,7 @@
 
 #include "engine/Vulcain.h"
 
-#include "engine/CommandPool.hpp"
+#include "engine/Renderer.hpp"
 #include "engine/Pipeline.hpp"
 #include "engine/DevicePicker.hpp"
 
@@ -55,13 +55,16 @@ int main() {
     Vulcain::Renderpass renderpass(&swapchain);
     Vulcain::ImageViews views(&renderpass);
     Vulcain::CommandPool pool(&views);
-
+    
     auto basicPipeline = Vulcain::Pipeline { &renderpass, foundry.modulesFromShaderName("basic") };
 
     pool.record([&basicPipeline](VkCommandBuffer cmdBuf) {
         vkCmdBindPipeline(cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, basicPipeline.get());
         vkCmdDraw(cmdBuf, 3, 1, 0, 0);
     });
+
+    Vulcain::Renderer renderer(&pool);
+    renderer.draw();
 
     return 0;
 }

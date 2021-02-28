@@ -51,6 +51,10 @@ class Device {
         return _pDeviceDetails->presentationAndGraphicsQueueIndex;
     }
 
+    VkQueue queue() const {
+        return _presentationAndGraphicsQueue;
+    }
+
     const SwapChainSupportDetails& swapchainDetails() const {
         return _pDeviceDetails->swapchainDetails;
     }
