@@ -11,6 +11,10 @@
         "CHERE_INVOKING": "1",
         "MSVSCODE": "1"
     },
+    "search.exclude": {
+        "deps": true,
+        "cmake": true
+    },
     "terminal.integrated.scrollback": 10000,
     "files.associations": {
         "filesystem": "cpp",

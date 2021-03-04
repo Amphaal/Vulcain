@@ -55,9 +55,15 @@ class CommandPool {
             renderPassInfo.renderArea.offset = {0, 0};
             renderPassInfo.renderArea.extent = _views->renderpass()->swapchain()->imageExtent;
 
-            VkClearValue clearColor = {0.0f, 0.0f, 0.0f, 1.0f};
-            renderPassInfo.clearValueCount = 1;
-            renderPassInfo.pClearValues = &clearColor;
+            std::vector<VkClearValue> clearColors { {0.0f, 0.0f, 0.0f, 1.0f} };
+            renderPassInfo.clearValueCount = clearColors.size();
+            renderPassInfo.pClearValues = clearColors.data();
+
+            auto viewport = _views->renderpass()->swapchain()->defaultViewport();
+            vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+            auto scissor = _views->renderpass()->swapchain()->defaultScissor();
+            vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
                 vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
                     //

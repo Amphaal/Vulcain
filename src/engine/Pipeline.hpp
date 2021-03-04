@@ -62,7 +62,7 @@ class Pipeline {
         pipelineInfo.pMultisampleState = &builder.multisampling;
         pipelineInfo.pDepthStencilState = nullptr; // Optional
         pipelineInfo.pColorBlendState = &builder.colorBlending;
-        pipelineInfo.pDynamicState = nullptr; // Optional
+        pipelineInfo.pDynamicState = &builder.dynamicState; // Optional
         pipelineInfo.layout = _layout;
         pipelineInfo.renderPass = renderpass->get();
         pipelineInfo.subpass = 0;

@@ -27,8 +27,6 @@ struct PipelineBuilder {
  public:
     VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
     VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
-    VkViewport viewport{};
-    VkRect2D scissor{};
     VkPipelineViewportStateCreateInfo viewportState{};
     VkPipelineRasterizationStateCreateInfo rasterizer{};
     VkPipelineMultisampleStateCreateInfo multisampling{};
@@ -50,24 +48,10 @@ struct PipelineBuilder {
         inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
         inputAssembly.primitiveRestartEnable = VK_FALSE;
 
-        //
-        viewport.x = 0.0f;
-        viewport.y = 0.0f;
-        viewport.width = (float) swapchain->imageExtent.width;
-        viewport.height = (float) swapchain->imageExtent.height;
-        viewport.minDepth = 0.0f;
-        viewport.maxDepth = 1.0f;
-
-        //
-        scissor.offset = {0, 0};
-        scissor.extent = swapchain->imageExtent;
-
-        //
+        // empty since all values are controlled dynamically
         viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-        viewportState.viewportCount = 1;
-        viewportState.pViewports = &viewport;
         viewportState.scissorCount = 1;
-        viewportState.pScissors = &scissor;
+        viewportState.viewportCount = 1;
 
         //
         rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
@@ -114,17 +98,17 @@ struct PipelineBuilder {
 
         //
         dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-        dynamicState.dynamicStateCount = 2;
-        dynamicState.pDynamicStates = _defaultDynamicStates;
+        dynamicState.dynamicStateCount = _defaultDynamicStates.size();
+        dynamicState.pDynamicStates = _defaultDynamicStates.data();
 
         //
         depthStencilState.stencilTestEnable = 0;
     }
 
  private:
-    static inline VkDynamicState _defaultDynamicStates[] {
+    static inline std::vector<VkDynamicState> _defaultDynamicStates {
         VK_DYNAMIC_STATE_VIEWPORT,
-        VK_DYNAMIC_STATE_LINE_WIDTH
+        VK_DYNAMIC_STATE_SCISSOR
     };
 };
 
