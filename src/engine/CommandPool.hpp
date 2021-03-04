@@ -38,6 +38,29 @@ class CommandPool : public IRegenerable {
     }
 
     void record(std::function<void(VkCommandBuffer)> commands) {
+        _recordedCommands = commands;
+        _sendCommands();
+    }
+
+    ImageViews* views() const {
+        return _views;
+    }
+
+    VkCommandBuffer commandBuffer(int index) const {
+        return _commandBuffers[index];
+    }
+
+ private:
+    VkCommandPool _commandPool;
+    std::function<void(VkCommandBuffer)> _recordedCommands;
+    std::vector<VkCommandBuffer> _commandBuffers;
+    ImageViews* _views = nullptr;
+
+    Device* _device() const {
+        return _views->renderpass()->swapchain()->device();
+    }
+
+    void _sendCommands() {
         for(size_t i = 0; i < _commandBuffers.size(); i++) {
             //
             auto &commandBuffer = _commandBuffers[i];
@@ -68,7 +91,7 @@ class CommandPool : public IRegenerable {
 
                 vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
                     //
-                    commands(commandBuffer);
+                    _recordedCommands(commandBuffer);
                     //
                 vkCmdEndRenderPass(commandBuffer);
 
@@ -76,23 +99,6 @@ class CommandPool : public IRegenerable {
             auto resultEnd = vkEndCommandBuffer(commandBuffer);
             assert(resultEnd == VK_SUCCESS);
         }
-    }
-
-    ImageViews* views() const {
-        return _views;
-    }
-
-    VkCommandBuffer commandBuffer(int index) const {
-        return _commandBuffers[index];
-    }
-
- private:
-    VkCommandPool _commandPool;
-    std::vector<VkCommandBuffer> _commandBuffers;
-    ImageViews* _views = nullptr;
-
-    Device* _device() const {
-        return _views->renderpass()->swapchain()->device();
     }
 
     void _createCommandPool() {
@@ -123,6 +129,7 @@ class CommandPool : public IRegenerable {
 
     void _gen() final {
         _allocateCommandBuffers(_views->count());
+        if(_recordedCommands) _sendCommands();
     }
 
     void _degen() final {

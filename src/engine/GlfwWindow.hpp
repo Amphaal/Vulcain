@@ -38,18 +38,57 @@ class GlfwWindow {
  public:   
     friend class Renderer;
 
-    GlfwWindow();
-    ~GlfwWindow();
+    GlfwWindow() {
+        //
+        glfwInit();
 
-    void poolEventsAndDraw();
+        //
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+        _window = glfwCreateWindow(800, 600, "Vulkan window", nullptr, nullptr);
+        glfwSetWindowUserPointer(_window, this);
+    }
 
-    HWND handle();
+    ~GlfwWindow() {
+        if(_window) glfwDestroyWindow(_window);
+        glfwTerminate();
+    }
 
-    VkExtent2D framebufferSize();
+    void poolEventsAndDraw() {
+        while(!glfwWindowShouldClose(_window)) {
+            glfwPollEvents();
+            _drawer->draw();
+        }
+    }
+
+    HWND handle() {
+        return glfwGetWin32Window(_window);
+    }
+
+    VkExtent2D framebufferSize() {
+        int width, height;
+        glfwGetFramebufferSize(_window, &width, &height);
+        
+        return {
+            static_cast<uint32_t>(width),
+            static_cast<uint32_t>(height)
+        };
+    }
  
  protected:
-    void _bindDrawer(IDrawer* drawer);
-    void _bindFramebufferChanges(std::atomic<bool>* framebufferChangedFlag);
+    void _bindDrawer(IDrawer* drawer) {
+        _drawer = drawer;
+   }
+
+   void _bindFramebufferChanges(std::atomic<bool>* framebufferChangedFlag) {
+        //
+        _framebufferChangedFlag = framebufferChangedFlag;
+
+        //
+        glfwSetFramebufferSizeCallback(_window, [](GLFWwindow* window, int width, int height){
+            auto handler = reinterpret_cast<GlfwWindow*>(glfwGetWindowUserPointer(window));
+            *handler->_framebufferChangedFlag = true;
+        });
+   }
 
  private:
     GLFWwindow* _window = nullptr;
@@ -58,4 +97,4 @@ class GlfwWindow {
     IDrawer* _drawer = nullptr;
 };
 
-}; // namespace Vulcain
+} // namespace Vulcain

@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "GlfwWindow.h"
+#include "GlfwWindow.hpp"
 #include "Instance.hpp"
 
 namespace Vulcain {
