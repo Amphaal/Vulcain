@@ -20,26 +20,14 @@
 #pragma onceZ
 
 #include "Renderpass.hpp"
+#include "IRegenerable.hpp"
 
 namespace Vulcain {
 
-class ImageViews {
+class ImageViews : public IRegenerable {
  public:
-    ImageViews(Renderpass* renderpass) : _renderpass(renderpass) {
-        //
-        auto swapchain = renderpass->swapchain();
-        auto swapChainImages = swapchain->images();
-        
-        //
-        _c = swapChainImages.size();
-        _views.resize(_c);
-        _fbs.resize(_c);
-
-        //
-        for(size_t i = 0; i < swapChainImages.size(); i++) {
-            _pushImageView(swapchain, swapChainImages[i], &_views[i]);
-            _pushFramebuffer(swapchain, renderpass, _views[i], &_fbs[i]);
-        }
+    ImageViews(Renderpass* renderpass) : IRegenerable(renderpass), _renderpass(renderpass) {
+        _gen();
     }
 
     // how many images handled
@@ -56,15 +44,7 @@ class ImageViews {
     }
 
     ~ImageViews() {
-        //
-        for (auto framebuffer : _fbs) {
-            vkDestroyFramebuffer(_renderpass->swapchain()->device()->get(), framebuffer, nullptr);
-        }
-
-        //
-        for (auto imageView : _views) {
-            vkDestroyImageView(_renderpass->swapchain()->device()->get(), imageView, nullptr);
-        }
+        _degen();
     }
 
  private:
@@ -112,6 +92,35 @@ class ImageViews {
         //
         auto result = vkCreateFramebuffer(_renderpass->swapchain()->device()->get(), &framebufferInfo, nullptr, into);
         assert(result == VK_SUCCESS);
+    }
+
+    void _gen() final {
+        //
+        auto swapchain = _renderpass->swapchain();
+        auto swapChainImages = swapchain->images();
+        
+        //
+        _c = swapChainImages.size();
+        _views.resize(_c);
+        _fbs.resize(_c);
+
+        //
+        for(size_t i = 0; i < swapChainImages.size(); i++) {
+            _pushImageView(swapchain, swapChainImages[i], &_views[i]);
+            _pushFramebuffer(swapchain, _renderpass, _views[i], &_fbs[i]);
+        }
+    }
+
+    void _degen() final {
+        //
+        for (auto framebuffer : _fbs) {
+            vkDestroyFramebuffer(_renderpass->swapchain()->device()->get(), framebuffer, nullptr);
+        }
+
+        //
+        for (auto imageView : _views) {
+            vkDestroyImageView(_renderpass->swapchain()->device()->get(), imageView, nullptr);
+        }
     }
 };
 

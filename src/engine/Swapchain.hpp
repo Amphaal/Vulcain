@@ -20,16 +20,16 @@
 #pragma once
 
 #include "Device.hpp"
+#include "IRegenerable.hpp"
 
 namespace Vulcain {
 
-class Swapchain : public VkSwapchainCreateInfoKHR {
+class Swapchain : public VkSwapchainCreateInfoKHR, public IRegenerable {
  public:
-    Swapchain(Device* device) : VkSwapchainCreateInfoKHR{}, _device(device) {
+    Swapchain(Device* device) : VkSwapchainCreateInfoKHR{}, IRegenerable(nullptr), _device(device) {
         //
         auto const &swapChainSupport = _device->swapchainDetails();
         const auto swapSurfaceFormat = swapChainSupport.getSwapSurfaceFormat();
-        const auto extent = swapChainSupport.getSwapExtent(device->surface()->window());
         const auto presentMode = swapChainSupport.getSwapPresentMode();
 
         // determine image count
@@ -43,7 +43,6 @@ class Swapchain : public VkSwapchainCreateInfoKHR {
         this->minImageCount = imageCount;
         this->imageFormat = swapSurfaceFormat.format;
         this->imageColorSpace = swapSurfaceFormat.colorSpace;
-        this->imageExtent = extent;
         this->imageArrayLayers = 1;
         this->imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
         this->preTransform = swapChainSupport.capabilities.currentTransform;
@@ -56,14 +55,8 @@ class Swapchain : public VkSwapchainCreateInfoKHR {
         this->queueFamilyIndexCount = 0; // Optional
         this->pQueueFamilyIndices = nullptr; // Optional
 
-        // create swapchain...
-        auto result = vkCreateSwapchainKHR(_device->get(), this, nullptr, &_swapChain);
-        assert(result == VK_SUCCESS);
-
-        // get images
-        vkGetSwapchainImagesKHR(_device->get(), _swapChain, &imageCount, nullptr);
-        _swapChainImages.resize(imageCount);
-        vkGetSwapchainImagesKHR(_device->get(), _swapChain, &imageCount, _swapChainImages.data());
+        //
+        _gen();
     }
 
     VkSwapchainKHR get() const {
@@ -101,13 +94,36 @@ class Swapchain : public VkSwapchainCreateInfoKHR {
     }
 
     ~Swapchain() {
-        vkDestroySwapchainKHR(_device->get(), _swapChain, nullptr);
+        _degen();
     }
 
  private:
     VkSwapchainKHR _swapChain;
     Device* _device = nullptr;
     std::vector<VkImage> _swapChainImages;
+
+    void _gen() final {
+        // update extent
+        auto const &swapChainSupport = _device->swapchainDetails();
+        const auto extent = swapChainSupport.getSwapExtent(_device->surface()->window());
+        this->imageExtent = extent;
+
+        // create swapchain...
+        auto result = vkCreateSwapchainKHR(_device->get(), this, nullptr, &_swapChain);
+        assert(result == VK_SUCCESS);
+
+        // get images
+        unsigned int imageCount = 0;
+        vkGetSwapchainImagesKHR(_device->get(), _swapChain, &imageCount, nullptr);
+        assert(imageCount);
+        _swapChainImages.resize(imageCount);
+        vkGetSwapchainImagesKHR(_device->get(), _swapChain, &imageCount, _swapChainImages.data());
+    }
+
+    void _degen() final {
+        vkDestroySwapchainKHR(_device->get(), _swapChain, nullptr);
+    }
+
 };
 
 }; // namespace Vulcain

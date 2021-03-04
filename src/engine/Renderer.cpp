@@ -153,6 +153,6 @@ Vulcain::Swapchain* Vulcain::Renderer::_swapchain() const {
 }
 
 void Vulcain::Renderer::_regenerateSwapChain() {
-    auto i = true;
-    // TODO
+    vkDeviceWaitIdle(_device()->get());
+    _pool->regenerate();
 }

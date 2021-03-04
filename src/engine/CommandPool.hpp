@@ -22,14 +22,15 @@
 #include <functional>
 
 #include "ImageViews.hpp"
+#include "IRegenerable.hpp"
 
 namespace Vulcain {
 
-class CommandPool {
+class CommandPool : public IRegenerable {
  public:
-    CommandPool(ImageViews* views) : _views(views) {       
+    CommandPool(ImageViews* views) : IRegenerable(views), _views(views) {       
         _createCommandPool();
-        _allocateCommandBuffers(views->count());
+        _gen();
     }
 
     ~CommandPool() {
@@ -118,6 +119,14 @@ class CommandPool {
         //
         auto result = vkAllocateCommandBuffers(_device()->get(), &allocInfo, _commandBuffers.data());
         assert(result == VK_SUCCESS);
+    }
+
+    void _gen() final {
+        _allocateCommandBuffers(_views->count());
+    }
+
+    void _degen() final {
+        vkFreeCommandBuffers(_device()->get(), _commandPool, static_cast<uint32_t>(_commandBuffers.size()), _commandBuffers.data());
     }
 };
 

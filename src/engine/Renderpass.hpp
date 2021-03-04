@@ -20,51 +20,46 @@
 #pragma once
 
 #include "Swapchain.hpp"
+#include "IRegenerable.hpp"
 
 namespace Vulcain {
 
-class Renderpass {
+class Renderpass : public IRegenerable {
  public:
-    Renderpass(Swapchain* swapchain) : _swapchain(swapchain) {
+    Renderpass(Swapchain* swapchain) : IRegenerable(swapchain), _swapchain(swapchain) {
         //
-        VkAttachmentDescription colorAttachment{};
-        colorAttachment.format = swapchain->imageFormat;
-        colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-        colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        _colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        _colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        _colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        _colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        _colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        _colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        _colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
-        VkAttachmentReference colorAttachmentRef{};
-        colorAttachmentRef.attachment = 0;
-        colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        _colorAttachmentRef.attachment = 0;
+        _colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-        VkSubpassDescription subpass{};
-        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-        subpass.colorAttachmentCount = 1;
-        subpass.pColorAttachments = &colorAttachmentRef;
+        _subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        _subpass.colorAttachmentCount = 1;
+        _subpass.pColorAttachments = &_colorAttachmentRef;
 
-        VkSubpassDependency dependency{};
-        dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-        dependency.dstSubpass = 0;
-        dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        dependency.srcAccessMask = 0;
-        dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        _dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+        _dependency.dstSubpass = 0;
+        _dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        _dependency.srcAccessMask = 0;
+        _dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        _dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
-        VkRenderPassCreateInfo renderPassInfo{};
-        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        renderPassInfo.attachmentCount = 1;
-        renderPassInfo.pAttachments = &colorAttachment;
-        renderPassInfo.subpassCount = 1;
-        renderPassInfo.pSubpasses = &subpass;
-        renderPassInfo.dependencyCount = 1;
-        renderPassInfo.pDependencies = &dependency;
+        _renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        _renderPassInfo.attachmentCount = 1;
+        _renderPassInfo.pAttachments = &_colorAttachment;
+        _renderPassInfo.subpassCount = 1;
+        _renderPassInfo.pSubpasses = &_subpass;
+        _renderPassInfo.dependencyCount = 1;
+        _renderPassInfo.pDependencies = &_dependency;
 
-        auto result = vkCreateRenderPass(_swapchain->device()->get(), &renderPassInfo, nullptr, &_renderPass);
-        assert(result == VK_SUCCESS);
+        //
+        _gen();
     }
 
     VkRenderPass get() const {
@@ -76,12 +71,31 @@ class Renderpass {
     }
 
     ~Renderpass() {
-        vkDestroyRenderPass(_swapchain->device()->get(), _renderPass, nullptr);
+        _degen();
     }
  
  private:
+    VkAttachmentDescription _colorAttachment{};
+    VkAttachmentReference _colorAttachmentRef{};
+    VkSubpassDescription _subpass{};
+    VkSubpassDependency _dependency{};
+    VkRenderPassCreateInfo _renderPassInfo{};
+
     Swapchain* _swapchain = nullptr;
     VkRenderPass _renderPass;
+
+    void _gen() final {
+        // update imageformat from recreated swapchain
+        _colorAttachment.format = _swapchain->imageFormat;
+
+        // create
+        auto result = vkCreateRenderPass(_swapchain->device()->get(), &_renderPassInfo, nullptr, &_renderPass);
+        assert(result == VK_SUCCESS);
+    }
+
+    void _degen() final {
+        vkDestroyRenderPass(_swapchain->device()->get(), _renderPass, nullptr);
+    }
 };
 
 }; // namespace Vulcain

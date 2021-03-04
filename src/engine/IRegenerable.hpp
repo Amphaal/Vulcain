@@ -19,43 +19,38 @@
 
 #pragma once
 
-#include "GlfwWindow.h"
-#include "Instance.hpp"
+#include <stack>
 
 namespace Vulcain {
 
-class Surface {
- public:    
-    Surface(GlfwWindow* window, Instance* instance) : _instance(instance), _window(window) {
-        VkWin32SurfaceCreateInfoKHR createInfo{};
-        createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-        createInfo.hwnd = _window->handle();
-        createInfo.hinstance = GetModuleHandle(nullptr);
+class IRegenerable {
+ public:
+    IRegenerable(IRegenerable* chainPredecessor = nullptr) : _chainPredecessor(chainPredecessor) {}
+    
+    void regenerate() {
+        std::stack<IRegenerable*> stack;
 
-        auto result = vkCreateWin32SurfaceKHR(_instance->get(), &createInfo, nullptr, &_surface);
-        assert(result == VK_SUCCESS);
+        // degen FIFO style
+        auto cp = this;
+        while(cp) {
+           cp->_degen();
+           stack.push(cp);
+           cp = cp->_chainPredecessor;
+        }
+
+        // gen LIFO style
+        while (!stack.empty()) {
+            stack.top()->_gen();
+            stack.pop();
+        }
     }
-
-    ~Surface() {
-        if(_instance) vkDestroySurfaceKHR(_instance->get(), _surface, nullptr);
-    }
-
-    Instance* instance() const {
-        return _instance;
-    }
-
-    GlfwWindow* window() const {
-        return _window;
-    }
-
-    VkSurfaceKHR get() {
-        return _surface;
-    }
-
+ 
+ protected:
+    virtual void _gen() = 0;
+    virtual void _degen() = 0;
+ 
  private:
-    VkSurfaceKHR _surface;
-    Instance* _instance = nullptr;
-    GlfwWindow* _window = nullptr;
+    IRegenerable* _chainPredecessor = nullptr;
 };
 
 }; // namespace Vulcain
