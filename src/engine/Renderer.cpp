@@ -64,7 +64,7 @@ void Vulcain::Renderer::draw() {
     // still allow submoptimal swapchain
     assert(result == VK_SUCCESS || result == VK_SUBOPTIMAL_KHR);
 
-    // if has an image in fight on index, wait for it to be processed
+    // if has an image in fight has fence on index, wait for it to be processed
     if (_imagesInFlight[imageIndex] != VK_NULL_HANDLE) {
         vkWaitForFences(_device()->get(), 1, &_imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
     }
@@ -90,7 +90,7 @@ void Vulcain::Renderer::draw() {
 
     vkResetFences(_device()->get(), 1, &_inFlightFences[_currentFrame]);
 
-    result = vkQueueSubmit(_device()->queue(), 1, &submitInfo, VK_NULL_HANDLE);
+    result = vkQueueSubmit(_device()->queue(), 1, &submitInfo, _inFlightFences[_currentFrame]);
     assert(result == VK_SUCCESS);
 
     VkPresentInfoKHR presentInfo{};
@@ -153,5 +153,6 @@ Vulcain::Swapchain* Vulcain::Renderer::_swapchain() const {
 }
 
 void Vulcain::Renderer::_regenerateSwapChain() {
+    auto i = true;
     // TODO
 }
