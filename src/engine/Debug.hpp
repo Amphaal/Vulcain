@@ -40,4 +40,4 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
     return VK_FALSE;
 }
 
-}; // namespace Vulcain
+} // namespace Vulcain

@@ -180,4 +180,4 @@ class DevicePicker {
     }
 };
 
-}; // namespace Vulcain
+} // namespace Vulcain

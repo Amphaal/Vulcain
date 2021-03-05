@@ -176,4 +176,4 @@ class InstanceCreateInfo : public VkInstanceCreateInfo {
     }
 };
 
-}; // namespace Vulcain
+} // namespace Vulcain

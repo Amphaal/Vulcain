@@ -141,4 +141,4 @@ class ShaderFoundry {
     Device* _device = nullptr;
 };
 
-}; // namespace Vulcain
+} // namespace Vulcain

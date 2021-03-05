@@ -17,7 +17,7 @@
 // for further details. Graphical resources without explicit references to a
 // different license and copyright still refer to this GPL.
 
-#pragma onceZ
+#pragma once
 
 #include <functional>
 
@@ -137,4 +137,4 @@ class CommandPool : public IRegenerable {
     }
 };
 
-}; // namespace Vulcain
+} // namespace Vulcain

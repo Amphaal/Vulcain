@@ -53,4 +53,4 @@ class IRegenerable {
     IRegenerable* _chainPredecessor = nullptr;
 };
 
-}; // namespace Vulcain
+} // namespace Vulcain

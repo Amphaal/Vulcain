@@ -19,12 +19,12 @@
 
 #include "Renderer.h"
 
-Vulcain::Renderer::Renderer(CommandPool* pool, Vulcain::GlfwWindow* window) : _pool(pool) {
+Vulcain::Renderer::Renderer(CommandPool* pool, Vulcain::GlfwWindow* window) : _pool(pool), _window(window) {
     _createSyncObjects();
     
     //
-    window->_bindFramebufferChanges(&_hasFramebufferResized);
-    window->_bindDrawer(this);
+    _window->_bindFramebufferChanges(&_hasFramebufferResized);
+    _window->_bindDrawer(this);
 }
 
 Vulcain::Renderer::~Renderer() {
@@ -153,6 +153,12 @@ Vulcain::Swapchain* Vulcain::Renderer::_swapchain() const {
 }
 
 void Vulcain::Renderer::_regenerateSwapChain() {
+    //
+    _window->waitUntilSwapchainIsLegal();
+
+    // wait
     vkDeviceWaitIdle(_device()->get());
+
+    // regenerate chain
     _pool->regenerate();
 }

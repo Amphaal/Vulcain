@@ -98,4 +98,4 @@ class Renderpass : public IRegenerable {
     }
 };
 
-}; // namespace Vulcain
+} // namespace Vulcain

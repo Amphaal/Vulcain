@@ -53,7 +53,7 @@ class GlfwWindow {
         glfwTerminate();
     }
 
-    void poolEventsAndDraw() {
+    void pollEventsAndDraw() {
         while(!glfwWindowShouldClose(_window)) {
             glfwPollEvents();
             _drawer->draw();
@@ -72,6 +72,19 @@ class GlfwWindow {
             static_cast<uint32_t>(width),
             static_cast<uint32_t>(height)
         };
+    }
+
+    void waitUntilSwapchainIsLegal() {
+        //
+        int width, height;
+        glfwGetFramebufferSize(_window, &width, &height);
+        
+        //
+        if(width != 0 && height != 0) return;
+
+        //
+        glfwWaitEvents();
+        waitUntilSwapchainIsLegal();
     }
  
  protected:

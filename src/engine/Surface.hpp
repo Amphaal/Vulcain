@@ -58,4 +58,4 @@ class Surface {
     GlfwWindow* _window = nullptr;
 };
 
-}; // namespace Vulcain
+} // namespace Vulcain

@@ -62,4 +62,4 @@ struct PhysicalDeviceDetails {
     int presentationAndGraphicsQueueIndex = 0;
 };
 
-}; // namespace Vulcain
+} // namespace Vulcain

@@ -124,4 +124,4 @@ class ImageViews : public IRegenerable {
     }
 };
 
-}; // namespace Vulcain
+} // namespace Vulcain

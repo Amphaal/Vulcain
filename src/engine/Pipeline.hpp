@@ -48,7 +48,7 @@ class Pipeline {
 
     void _createPipeline(Swapchain* swapchain, Renderpass* renderpass, const ShaderFoundry::Modules& modules) {
         //
-        PipelineBuilder builder(swapchain);
+        PipelineBuilder builder;
         
         //
         VkGraphicsPipelineCreateInfo pipelineInfo{};
@@ -87,4 +87,4 @@ class Pipeline {
     }
 };
 
-}; // namespace Vulcain
+} // namespace Vulcain

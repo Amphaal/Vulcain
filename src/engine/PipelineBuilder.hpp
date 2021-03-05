@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "Swapchain.hpp"
+#include "Buffer.hpp"
 
 namespace Vulcain {
 
@@ -35,13 +35,16 @@ struct PipelineBuilder {
     VkPipelineDepthStencilStateCreateInfo depthStencilState{};
     VkPipelineDynamicStateCreateInfo dynamicState{};
 
-    PipelineBuilder(Swapchain* swapchain) {
+    PipelineBuilder() {
         //
         vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        vertexInputInfo.vertexBindingDescriptionCount = 0;
-        vertexInputInfo.pVertexBindingDescriptions = nullptr; // Optional
-        vertexInputInfo.vertexAttributeDescriptionCount = 0;
-        vertexInputInfo.pVertexAttributeDescriptions = nullptr; // Optional
+            auto bindingDescr = Vertex::getBindingDescription();
+            vertexInputInfo.vertexBindingDescriptionCount = 1;
+            vertexInputInfo.pVertexBindingDescriptions = &bindingDescr; // Optional
+
+            auto attrDescr = Vertex::getAttributeDescriptions();
+            vertexInputInfo.vertexAttributeDescriptionCount = attrDescr.size();
+            vertexInputInfo.pVertexAttributeDescriptions = attrDescr.data(); // Optional
 
         //
         inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -112,4 +115,4 @@ struct PipelineBuilder {
     };
 };
 
-}; // namespace Vulcain
+} // namespace Vulcain

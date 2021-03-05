@@ -126,4 +126,4 @@ class Swapchain : public VkSwapchainCreateInfoKHR, public IRegenerable {
 
 };
 
-}; // namespace Vulcain
+} // namespace Vulcain

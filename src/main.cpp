@@ -23,11 +23,6 @@
 #include "engine/Pipeline.hpp"
 #include "engine/DevicePicker.hpp"
 
-#define GLM_FORCE_RADIANS
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#include <glm/vec4.hpp>
-#include <glm/mat4x4.hpp>
-
 int main() {
     #ifdef USES_VOLK
     auto result = volkInitialize();
@@ -36,14 +31,7 @@ int main() {
     
     Vulcain::GlfwWindow window;
 
-    VkApplicationInfo appInfo{};
-    appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-    appInfo.pApplicationName = "Hello Triangle";
-    appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-    appInfo.pEngineName = "Vulcain";
-    appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-    appInfo.apiVersion = VK_API_VERSION_1_0;
-
+    auto appInfo = Vulcain::info("Hello Triangle");
     Vulcain::InstanceCreateInfo createInfo(&appInfo);
     Vulcain::Instance instance(&createInfo);
     Vulcain::Surface surface(&window, &instance);
@@ -54,17 +42,24 @@ int main() {
     Vulcain::Swapchain swapchain(&device);
     Vulcain::Renderpass renderpass(&swapchain);
     Vulcain::ImageViews views(&renderpass);
-    Vulcain::CommandPool pool(&views);
+    Vulcain::CommandPool cmdPool(&views);
     
     auto basicPipeline = Vulcain::Pipeline { &renderpass, foundry.modulesFromShaderName("basic") };
 
-    pool.record([&basicPipeline](VkCommandBuffer cmdBuf) {
+    const std::vector<Vulcain::Vertex> vertices {
+        {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+        {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+        {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
+    };
+    Vulcain::Buffer buffer(&device, &vertices);
+
+    cmdPool.record([&basicPipeline](VkCommandBuffer cmdBuf) {
         vkCmdBindPipeline(cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, basicPipeline.get());
         vkCmdDraw(cmdBuf, 3, 1, 0, 0);
     });
 
-    Vulcain::Renderer renderer(&pool, &window);
-    window.poolEventsAndDraw();
+    Vulcain::Renderer renderer(&cmdPool, &window);
+    window.pollEventsAndDraw();
 
     return 0;
 }

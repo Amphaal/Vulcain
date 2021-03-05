@@ -43,6 +43,7 @@ class Renderer : public IDrawer {
     std::atomic<bool> _hasFramebufferResized;
 
     CommandPool* _pool = nullptr;
+    Vulcain::GlfwWindow* _window = nullptr;
 
     void _createSyncObjects();
 
@@ -52,4 +53,4 @@ class Renderer : public IDrawer {
     void _regenerateSwapChain();
 };
 
-}; // namespace Vulcain
+} // namespace Vulcain

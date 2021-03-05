@@ -90,5 +90,5 @@ class Instance {
     VkInstance _instance;
 };
 
-}; // namespace Vulcain
+} // namespace Vulcain
 

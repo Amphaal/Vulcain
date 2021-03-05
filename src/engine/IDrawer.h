@@ -26,4 +26,4 @@ class IDrawer {
     virtual void draw() = 0;
 };
 
-}; // namespace Vulcain
+} // namespace Vulcain
