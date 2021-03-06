@@ -56,15 +56,18 @@ struct Vertex {
     }
 };
 
-class Buffer {
+template<typename T>
+class IBuffer {
  public:
-    Buffer(Device* device, const std::vector<Vulcain::Vertex>* vertices) : _device(device) {
+    IBuffer(Device* device, T vertices) : _device(device), _vertices(vertices) {
         //
         VkBufferCreateInfo bufferInfo{};
         bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        bufferInfo.size = sizeof(&vertices[0]) * vertices->size();
+        bufferInfo.size = sizeof(_vertices[0]) * _vertices.size();
         bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
         bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+        _bufferSize = bufferInfo.size;
 
         //
         auto error = vkCreateBuffer(_device->get(), &bufferInfo, nullptr, &_vertexBuffer);
@@ -92,17 +95,49 @@ class Buffer {
         vkBindBufferMemory(_device->get(), _vertexBuffer, _vertexBufferMemory, 0);
     }
  
+    VkBuffer get() const {
+        return _vertexBuffer;
+    }
 
+    auto size() const {
+        return static_cast<uint32_t>(_vertices.size());
+    }
 
-    ~Buffer() {
+    T& vertices() {
+        return _vertices;
+    }
+
+    ~IBuffer() {
         vkDestroyBuffer(_device->get(), _vertexBuffer, nullptr);
         vkFreeMemory(_device->get(), _vertexBufferMemory, nullptr);
     }
+ 
+ protected:
+    void _mapMemory() {        
+        void* data;
+        vkMapMemory(_device->get(), _vertexBufferMemory, 0, _bufferSize, 0, &data);
+        memcpy(data, _vertices.data(), (size_t) _bufferSize);
+        vkUnmapMemory(_device->get(), _vertexBufferMemory);
+    }
 
  private:
+    T _vertices;
     Device* _device = nullptr;
+
+    VkDeviceSize _bufferSize;
     VkBuffer _vertexBuffer;
     VkDeviceMemory _vertexBufferMemory;
 };
+
+template<class T>
+class IStaticBuffer : public IBuffer<const T> {
+ public:
+    IStaticBuffer(Device* device, const T vertices) : IBuffer<const T>(device, vertices) {
+        IBuffer<const T>::_mapMemory();
+    }
+};
+
+template<class T>
+using StaticBuffer = IStaticBuffer<std::vector<T>>;
 
 } // namespace Vulcain

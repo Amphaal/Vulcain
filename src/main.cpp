@@ -23,42 +23,48 @@
 #include "engine/Pipeline.hpp"
 #include "engine/DevicePicker.hpp"
 
+using namespace Vulcain;
+
 int main() {
     #ifdef USES_VOLK
     auto result = volkInitialize();
     assert(result == VK_SUCCESS);
     #endif
     
-    Vulcain::GlfwWindow window;
+    GlfwWindow window;
 
-    auto appInfo = Vulcain::info("Hello Triangle");
-    Vulcain::InstanceCreateInfo createInfo(&appInfo);
-    Vulcain::Instance instance(&createInfo);
-    Vulcain::Surface surface(&window, &instance);
-    auto device = Vulcain::DevicePicker::getBestDevice(&surface);
+    auto appInfo = info("Hello Triangle");
+    InstanceCreateInfo createInfo(&appInfo);
+    Instance instance(&createInfo);
+    Surface surface(&window, &instance);
+    auto device = DevicePicker::getBestDevice(&surface);
     
-    Vulcain::ShaderFoundry foundry(&device);
+    ShaderFoundry foundry(&device);
 
-    Vulcain::Swapchain swapchain(&device);
-    Vulcain::Renderpass renderpass(&swapchain);
-    Vulcain::ImageViews views(&renderpass);
-    Vulcain::CommandPool cmdPool(&views);
+    Swapchain swapchain(&device);
+    Renderpass renderpass(&swapchain);
+    ImageViews views(&renderpass);
+    CommandPool cmdPool(&views);
     
-    auto basicPipeline = Vulcain::Pipeline { &renderpass, foundry.modulesFromShaderName("basic") };
+    auto basicPipeline = Pipeline { &renderpass, foundry.modulesFromShaderName("basic") };
 
-    const std::vector<Vulcain::Vertex> vertices {
+    StaticBuffer<Vertex> buffer(&device, {
         {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
         {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
         {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
-    };
-    Vulcain::Buffer buffer(&device, &vertices);
-
-    cmdPool.record([&basicPipeline](VkCommandBuffer cmdBuf) {
-        vkCmdBindPipeline(cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, basicPipeline.get());
-        vkCmdDraw(cmdBuf, 3, 1, 0, 0);
     });
 
-    Vulcain::Renderer renderer(&cmdPool, &window);
+    cmdPool.record([&basicPipeline, &buffer](VkCommandBuffer cmdBuf) {
+        vkCmdBindPipeline(cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, basicPipeline.get());
+        
+        VkBuffer vertexBuffers[] = {buffer.get()};
+        VkDeviceSize offsets[] = {0};
+        vkCmdBindVertexBuffers(cmdBuf, 0, 1, vertexBuffers, offsets);
+
+        vkCmdDraw(cmdBuf, buffer.size(), 1, 0, 0);
+    });
+
+    Renderer renderer(&cmdPool, &window);
     window.pollEventsAndDraw();
 
     return 0;

@@ -34,16 +34,18 @@ struct PipelineBuilder {
     VkPipelineColorBlendStateCreateInfo colorBlending{};
     VkPipelineDepthStencilStateCreateInfo depthStencilState{};
     VkPipelineDynamicStateCreateInfo dynamicState{};
+    VkVertexInputBindingDescription bindingDescr;
+    std::array<VkVertexInputAttributeDescription, 2> attrDescr;
 
     PipelineBuilder() {
         //
         vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-            auto bindingDescr = Vertex::getBindingDescription();
+            bindingDescr = Vertex::getBindingDescription();
             vertexInputInfo.vertexBindingDescriptionCount = 1;
             vertexInputInfo.pVertexBindingDescriptions = &bindingDescr; // Optional
 
-            auto attrDescr = Vertex::getAttributeDescriptions();
-            vertexInputInfo.vertexAttributeDescriptionCount = attrDescr.size();
+            attrDescr = Vertex::getAttributeDescriptions();
+            vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attrDescr.size());
             vertexInputInfo.pVertexAttributeDescriptions = attrDescr.data(); // Optional
 
         //
