@@ -18,7 +18,8 @@
             "defines": [
                 "_DEBUG",
                 "UNICODE",
-                "_UNICODE"
+                "_UNICODE",
+                "GLFW_EXPOSE_NATIVE_WIN32"
             ],
             "windowsSdkVersion": "10.0.18362.0",
             "compilerPath": "C:/msys64/mingw64/bin/clang++.exe",

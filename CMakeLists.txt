@@ -55,14 +55,18 @@ target_include_directories(Vulcain PUBLIC
         find_package(PkgConfig REQUIRED)
         pkg_check_modules(Vulkan REQUIRED IMPORTED_TARGET vulkan)
         target_link_libraries(Vulcain PRIVATE PkgConfig::Vulkan)
+        if (WIN32)
+            target_compile_definitions(Vulcain PUBLIC VK_USE_PLATFORM_WIN32_KHR)
+        endif()
+        #define 
     else()
         # optimised volk Vulkan loader
         if (WIN32)
             set(VOLK_STATIC_DEFINES VK_USE_PLATFORM_WIN32_KHR)
         endif()
         add_subdirectory(deps/volk)
-        target_link_libraries(Vulcain PRIVATE volk)
-        add_compile_definitions(USES_VOLK)
+        target_compile_definitions(volk::volk PUBLIC USES_VOLK)
+        target_link_libraries(Vulcain PRIVATE volk::volk)
     endif()
 
 #
@@ -71,6 +75,10 @@ target_include_directories(Vulcain PUBLIC
 
     find_package(glfw3 REQUIRED)
     target_link_libraries(Vulcain PRIVATE glfw3)
+    add_compile_definitions(
+        GLFW_INCLUDE_VULKAN
+        GLFW_EXPOSE_NATIVE_WIN32
+    )
 
 #
 # glm
@@ -78,6 +86,10 @@ target_include_directories(Vulcain PUBLIC
 
     find_package(glm REQUIRED)
     target_link_libraries(Vulcain PRIVATE glm)
+    add_compile_definitions(
+        GLM_FORCE_RADIANS
+        GLM_FORCE_DEPTH_ZERO_TO_ONE
+    )
 
 #
 # SPIR-V ShaderFoundry
