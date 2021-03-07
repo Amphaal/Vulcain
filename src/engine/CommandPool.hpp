@@ -34,7 +34,7 @@ class CommandPool : public IRegenerable {
     }
 
     ~CommandPool() {
-        vkDestroyCommandPool(_device()->get(), _commandPool, nullptr);
+        vkDestroyCommandPool(device()->get(), _commandPool, nullptr);
     }
 
     void record(std::function<void(VkCommandBuffer)> commands) {
@@ -46,8 +46,16 @@ class CommandPool : public IRegenerable {
         return _views;
     }
 
+    VkCommandPool get() const {
+         return _commandPool;
+    }
+
     VkCommandBuffer commandBuffer(int index) const {
         return _commandBuffers[index];
+    }
+
+    Device* device() const {
+        return _views->renderpass()->swapchain()->device();
     }
 
  private:
@@ -55,10 +63,6 @@ class CommandPool : public IRegenerable {
     std::function<void(VkCommandBuffer)> _recordedCommands;
     std::vector<VkCommandBuffer> _commandBuffers;
     ImageViews* _views = nullptr;
-
-    Device* _device() const {
-        return _views->renderpass()->swapchain()->device();
-    }
 
     void _sendCommands() {
         for(size_t i = 0; i < _commandBuffers.size(); i++) {
@@ -105,9 +109,9 @@ class CommandPool : public IRegenerable {
         //
         VkCommandPoolCreateInfo poolInfo{};
         poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-        poolInfo.queueFamilyIndex = _device()->queueIndex();
+        poolInfo.queueFamilyIndex = device()->queueIndex();
         poolInfo.flags = 0; // Optional
-        auto result = vkCreateCommandPool(_device()->get(), &poolInfo, nullptr, &_commandPool);
+        auto result = vkCreateCommandPool(device()->get(), &poolInfo, nullptr, &_commandPool);
         assert(result == VK_SUCCESS);
     }
 
@@ -123,7 +127,7 @@ class CommandPool : public IRegenerable {
         allocInfo.commandBufferCount = (uint32_t) _commandBuffers.size();
 
         //
-        auto result = vkAllocateCommandBuffers(_device()->get(), &allocInfo, _commandBuffers.data());
+        auto result = vkAllocateCommandBuffers(device()->get(), &allocInfo, _commandBuffers.data());
         assert(result == VK_SUCCESS);
     }
 
@@ -133,7 +137,7 @@ class CommandPool : public IRegenerable {
     }
 
     void _degen() final {
-        vkFreeCommandBuffers(_device()->get(), _commandPool, static_cast<uint32_t>(_commandBuffers.size()), _commandBuffers.data());
+        vkFreeCommandBuffers(device()->get(), _commandPool, static_cast<uint32_t>(_commandBuffers.size()), _commandBuffers.data());
     }
 };
 

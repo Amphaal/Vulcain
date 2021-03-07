@@ -20,6 +20,7 @@
 #pragma once
 
 #include "Device.hpp"
+#include "CommandPool.hpp"
 
 #include <glm/vec4.hpp>
 #include <glm/mat4x4.hpp>
@@ -54,84 +55,153 @@ struct Vertex {
     }
 };
 
-template<typename T>
-class IBuffer {
+struct BaseBuffer {
  public:
-    IBuffer(Device* device, T vertices) : _device(device), _vertices(vertices) {
+    const VkDeviceSize bufferSize;
+
+    VkBuffer buffer;
+    VkDeviceMemory bufferMemory;
+
+    BaseBuffer duplicate(VkBufferUsageFlags usage, VkMemoryPropertyFlags properties) {
+        return BaseBuffer(this->_device, this->bufferSize, usage, properties);
+    }
+
+    BaseBuffer(Device* device, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties) : _device(device), bufferSize(size) {
         //
         VkBufferCreateInfo bufferInfo{};
         bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        bufferInfo.size = sizeof(_vertices[0]) * _vertices.size();
-        bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+        bufferInfo.size = size;
+        bufferInfo.usage = usage;
         bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-        _bufferSize = bufferInfo.size;
-
         //
-        auto error = vkCreateBuffer(_device->get(), &bufferInfo, nullptr, &_vertexBuffer);
+        auto error = vkCreateBuffer(device->get(), &bufferInfo, nullptr, &buffer);
         assert(!error);
 
         //
         VkMemoryRequirements memRequirements;
-        vkGetBufferMemoryRequirements(_device->get(), _vertexBuffer, &memRequirements);
+        vkGetBufferMemoryRequirements(device->get(), buffer, &memRequirements);
         
         //
         VkMemoryAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         allocInfo.allocationSize = memRequirements.size;
-        auto memTypeIndex = _device->findMemoryType(
-            memRequirements.memoryTypeBits, 
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
-        );
-        allocInfo.memoryTypeIndex = memTypeIndex;
+        allocInfo.memoryTypeIndex = device->findMemoryType(memRequirements.memoryTypeBits, properties);
         
         //
-        error = vkAllocateMemory(_device->get(), &allocInfo, nullptr, &_vertexBufferMemory);
+        error = vkAllocateMemory(device->get(), &allocInfo, nullptr, &bufferMemory);
         assert(!error);
 
         //
-        vkBindBufferMemory(_device->get(), _vertexBuffer, _vertexBufferMemory, 0);
-    }
- 
-    VkBuffer get() const {
-        return _vertexBuffer;
+        vkBindBufferMemory(device->get(), buffer, bufferMemory, 0);
     }
 
-    auto size() const {
+    void copyBuffer(CommandPool* pool, BaseBuffer& dstBuffer) {
+        VkCommandBufferAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        allocInfo.commandPool = pool->get();
+        allocInfo.commandBufferCount = 1;
+
+        VkCommandBuffer commandBuffer;
+        vkAllocateCommandBuffers(pool->device()->get(), &allocInfo, &commandBuffer);
+
+        VkCommandBufferBeginInfo beginInfo{};
+        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+        vkBeginCommandBuffer(commandBuffer, &beginInfo);
+
+            VkBufferCopy copyRegion{};
+            copyRegion.size = bufferSize;
+            vkCmdCopyBuffer(commandBuffer, buffer, dstBuffer.buffer, 1, &copyRegion);
+
+        vkEndCommandBuffer(commandBuffer);
+
+        VkSubmitInfo submitInfo{};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers = &commandBuffer;
+
+        vkQueueSubmit(pool->device()->queue(), 1, &submitInfo, VK_NULL_HANDLE);
+        vkQueueWaitIdle(pool->device()->queue());
+
+        vkFreeCommandBuffers(pool->device()->get(), pool->get(), 1, &commandBuffer);
+    }
+
+    ~BaseBuffer() {
+        vkDestroyBuffer(_device->get(), buffer, nullptr);
+        vkFreeMemory(_device->get(), bufferMemory, nullptr);
+    }
+
+ protected:
+    Device* _device = nullptr;
+};
+
+
+#ifdef WIN32
+auto i = true;
+#endif
+
+template<typename T>
+class IBuffer : public BaseBuffer {
+ public:
+    IBuffer(Device* device, T vertices, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties) : BaseBuffer(
+            device, 
+            _getBufferSize(vertices), 
+            usage,
+            properties
+        ), _vertices(vertices) { }
+
+    auto vertexCount() const {
         return static_cast<uint32_t>(_vertices.size());
     }
 
     T& vertices() {
         return _vertices;
     }
-
-    ~IBuffer() {
-        vkDestroyBuffer(_device->get(), _vertexBuffer, nullptr);
-        vkFreeMemory(_device->get(), _vertexBufferMemory, nullptr);
-    }
  
  protected:
-    void _mapMemory() {        
-        void* data;
-        vkMapMemory(_device->get(), _vertexBufferMemory, 0, _bufferSize, 0, &data);
-        memcpy(data, _vertices.data(), (size_t) _bufferSize);
-        vkUnmapMemory(_device->get(), _vertexBufferMemory);
+    void _mapVerticesToMemory(BaseBuffer& buffer) {
+        _mapVerticesToMemory(buffer.bufferMemory);
     }
 
  private:
     T _vertices;
-    Device* _device = nullptr;
 
-    VkDeviceSize _bufferSize;
-    VkBuffer _vertexBuffer;
-    VkDeviceMemory _vertexBufferMemory;
+    static auto _getBufferSize(T vertices) {
+        return sizeof(vertices[0]) * vertices.size();
+    }
+
+    void _mapVerticesToMemory(VkDeviceMemory memory) {
+        //
+        void* data;
+        vkMapMemory(_device->get(), memory, 0, this->bufferSize, 0, &data);
+        memcpy(data, _vertices.data(), (size_t) this->bufferSize);
+        vkUnmapMemory(_device->get(), memory);
+    }
 };
 
 template<class T>
 class IStaticBuffer : public IBuffer<const T> {
  public:
-    IStaticBuffer(Device* device, const T vertices) : IBuffer<const T>(device, vertices) {
-        IBuffer<const T>::_mapMemory();
+    IStaticBuffer(CommandPool* pool, const T vertices) : IBuffer<const T>(
+        pool->device(), 
+        vertices, 
+        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, 
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+    ) {
+        // create staging buffer
+        auto staging = BaseBuffer::duplicate(
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+        );
+
+        // map vertice to staging
+        IBuffer<const T>::_mapVerticesToMemory(staging);
+
+        // copy staging to GPU memory
+        staging.copyBuffer(pool, *this);
     }
 };
 

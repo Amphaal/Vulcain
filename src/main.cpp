@@ -48,20 +48,21 @@ int main() {
     
     auto basicPipeline = Pipeline { &renderpass, foundry.modulesFromShaderName("basic") };
 
-    StaticBuffer<Vertex> buffer(&device, {
-        {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-        {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-        {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
+    StaticBuffer<Vertex> buffer(&cmdPool, {
+        {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+        {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+        {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+        {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
     });
 
     cmdPool.record([&basicPipeline, &buffer](VkCommandBuffer cmdBuf) {
         vkCmdBindPipeline(cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, basicPipeline.get());
         
-        VkBuffer vertexBuffers[] = {buffer.get()};
+        VkBuffer vertexBuffers[] = {buffer.buffer};
         VkDeviceSize offsets[] = {0};
         vkCmdBindVertexBuffers(cmdBuf, 0, 1, vertexBuffers, offsets);
 
-        vkCmdDraw(cmdBuf, buffer.size(), 1, 0, 0);
+        vkCmdDraw(cmdBuf, buffer.vertexCount(), 1, 0, 0);
     });
 
     Renderer renderer(&cmdPool, &window);
