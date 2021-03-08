@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "Vulcain.h"
+#include "engine/common/Vulcain.h"
 
 namespace Vulcain {
 

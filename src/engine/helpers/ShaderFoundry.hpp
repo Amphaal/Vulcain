@@ -23,21 +23,23 @@
 #include <map>
 #include <filesystem>
 
-#include "Device.hpp"
+#include "engine/Device.hpp"
 
 #include <cmrc/cmrc.hpp>
+
+#include <spirv_cross/spirv_reflect.hpp>
 
 CMRC_DECLARE(shadersResources);
 
 namespace Vulcain {
 
-class ShaderFoundry {
+class ShaderFoundry : public DeviceBound {
  public:
     using CreateInfoByStage = std::map<VkShaderStageFlagBits, VkPipelineShaderStageCreateInfo>;
     using ModulesByPipeline = std::map<std::string, CreateInfoByStage>;
     using Modules = std::vector<VkPipelineShaderStageCreateInfo>;
 
-    ShaderFoundry(Device* device) : _device(device) {
+    ShaderFoundry(Device* device) : DeviceBound(device) {
         _createShaderModules();
     }
 
@@ -46,7 +48,7 @@ class ShaderFoundry {
         Modules out;
 
         auto found = _pipelines.find(shaderName);
-        assert(found != _pipelines.end());
+        assert(found != _pipelines.cend());
 
         for(auto& [flag, instr] : found->second) {
             out.push_back(instr);
@@ -57,7 +59,7 @@ class ShaderFoundry {
 
     ~ShaderFoundry() {
         for(auto module : _modules) {
-            vkDestroyShaderModule(_device->get(), module, nullptr);
+            vkDestroyShaderModule(*_device, module, nullptr);
         }
     }   
 
@@ -84,11 +86,11 @@ class ShaderFoundry {
 
             //
             auto find_stageFlag = STAGE_FROM_EXT.find(stage);
-            assert(find_stageFlag != STAGE_FROM_EXT.end());
+            assert(find_stageFlag != STAGE_FROM_EXT.cend());
             auto stageFlag = find_stageFlag->second;
 
             // ensure pipeline exists
-            if(_pipelines.find(name) == _pipelines.end()) {
+            if(_pipelines.find(name) == _pipelines.cend()) {
                 _pipelines.emplace(name, CreateInfoByStage{});
             }
 
@@ -122,11 +124,11 @@ class ShaderFoundry {
         VkShaderModuleCreateInfo createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
         createInfo.codeSize = shaderBinary.size();
-        createInfo.pCode = reinterpret_cast<const uint32_t*>(shaderBinary.begin());
+        createInfo.pCode = reinterpret_cast<const uint32_t*>(shaderBinary.cbegin());
 
         //
         VkShaderModule shaderModule;
-        auto result = vkCreateShaderModule(_device->get(), &createInfo, nullptr, &shaderModule);
+        auto result = vkCreateShaderModule(*_device, &createInfo, nullptr, &shaderModule);
         assert(result == VK_SUCCESS);
         
         //
@@ -136,9 +138,25 @@ class ShaderFoundry {
         return shaderModule;
     }
 
+    // TODO : use it to generate layouts !
+    void _reflectShaderFile(const cmrc::file& shaderBinary) {
+        using namespace spirv_cross;
+        
+        //
+        std::vector<uint32_t> ir(shaderBinary.begin(), shaderBinary.end());
+        Compiler comp(std::move(ir));
+        
+        // The SPIR-V is now parsed, and we can perform reflection on it.
+        ShaderResources resources = comp.get_shader_resources();
+        for (auto &u : resources.uniform_buffers) {
+            uint32_t set = comp.get_decoration(u.id, spv::DecorationDescriptorSet);
+            uint32_t binding = comp.get_decoration(u.id, spv::DecorationBinding);
+            std::printf("Found UBO %s at set = %u, binding = %u!\n", u.name.c_str(), set, binding);
+        }
+    }
+
     std::vector<VkShaderModule> _modules;
     ModulesByPipeline _pipelines;
-    Device* _device = nullptr;
 };
 
 } // namespace Vulcain

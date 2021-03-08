@@ -19,7 +19,8 @@
                 "_DEBUG",
                 "UNICODE",
                 "_UNICODE",
-                "GLFW_EXPOSE_NATIVE_WIN32"
+                "GLFW_EXPOSE_NATIVE_WIN32",
+                "VK_USE_PLATFORM_WIN32_KHR"
             ],
             "windowsSdkVersion": "10.0.18362.0",
             "compilerPath": "C:/msys64/mingw64/bin/clang++.exe",

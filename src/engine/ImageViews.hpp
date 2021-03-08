@@ -23,9 +23,9 @@
 
 namespace Vulcain {
 
-class ImageViews : public IRegenerable {
+class ImageViews : public DeviceBound, public IRegenerable {
  public:
-    ImageViews(Renderpass* renderpass) : IRegenerable(renderpass), _renderpass(renderpass) {
+    ImageViews(Renderpass* renderpass) : DeviceBound(renderpass), IRegenerable(renderpass), _renderpass(renderpass) {
         _gen();
     }
 
@@ -70,7 +70,7 @@ class ImageViews : public IRegenerable {
         createInfo.subresourceRange.layerCount = 1;
 
         //
-        auto result = vkCreateImageView(_renderpass->swapchain()->device()->get(), &createInfo, nullptr, into);
+        auto result = vkCreateImageView(*_device, &createInfo, nullptr, into);
         assert(result == VK_SUCCESS);
     }
 
@@ -78,7 +78,7 @@ class ImageViews : public IRegenerable {
         //
         VkFramebufferCreateInfo framebufferInfo{};
         framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-        framebufferInfo.renderPass = renderpass->get();
+        framebufferInfo.renderPass = *renderpass;
         framebufferInfo.attachmentCount = 1;
         VkImageView attachments[] = {
             targetView
@@ -89,7 +89,7 @@ class ImageViews : public IRegenerable {
         framebufferInfo.layers = 1;
 
         //
-        auto result = vkCreateFramebuffer(_renderpass->swapchain()->device()->get(), &framebufferInfo, nullptr, into);
+        auto result = vkCreateFramebuffer(*_device, &framebufferInfo, nullptr, into);
         assert(result == VK_SUCCESS);
     }
 
@@ -113,12 +113,12 @@ class ImageViews : public IRegenerable {
     void _degen() final {
         //
         for (auto framebuffer : _fbs) {
-            vkDestroyFramebuffer(_renderpass->swapchain()->device()->get(), framebuffer, nullptr);
+            vkDestroyFramebuffer(*_device, framebuffer, nullptr);
         }
 
         //
         for (auto imageView : _views) {
-            vkDestroyImageView(_renderpass->swapchain()->device()->get(), imageView, nullptr);
+            vkDestroyImageView(*_device, imageView, nullptr);
         }
     }
 };

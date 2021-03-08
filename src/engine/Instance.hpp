@@ -19,9 +19,9 @@
 
 #pragma once
 
-#include "Vulcain.h"
+#include "common/Vulcain.h"
 
-#include "InstanceCreateInfo.hpp"
+#include "helpers/InstanceCreateInfo.hpp"
 
 namespace Vulcain {
 
@@ -63,9 +63,7 @@ class Instance {
         vkDestroyInstance(_instance, nullptr);
     }
 
-    VkInstance get() {
-        return _instance;
-    }
+    operator VkInstance() const { return _instance; }
 
     const InstanceCreateInfo* createInfo() const {
         return _createInfos;

@@ -19,12 +19,12 @@
 
 #pragma once
 
-#include "IDrawer.h"
+#include "common/IDrawer.h"
 #include "CommandPool.hpp"
 
 namespace Vulcain {
 
-class Renderer : public IDrawer {
+class Renderer : public IDrawer, public DeviceBound {
  public:
     Renderer(CommandPool* pool, Vulcain::GlfwWindow* window);
     ~Renderer();
@@ -51,7 +51,6 @@ class Renderer : public IDrawer {
 
     void _createSyncObjects();
 
-    Device* _device() const;
     Swapchain* _swapchain() const;
 
     void _regenerateSwapChain();

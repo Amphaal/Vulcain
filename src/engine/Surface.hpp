@@ -32,12 +32,12 @@ class Surface {
         createInfo.hwnd = _window->handle();
         createInfo.hinstance = GetModuleHandle(nullptr);
 
-        auto result = vkCreateWin32SurfaceKHR(_instance->get(), &createInfo, nullptr, &_surface);
+        auto result = vkCreateWin32SurfaceKHR(*_instance, &createInfo, nullptr, &_surface);
         assert(result == VK_SUCCESS);
     }
 
     ~Surface() {
-        if(_instance) vkDestroySurfaceKHR(_instance->get(), _surface, nullptr);
+        if(_instance) vkDestroySurfaceKHR(*_instance, _surface, nullptr);
     }
 
     Instance* instance() const {
@@ -48,9 +48,7 @@ class Surface {
         return _window;
     }
 
-    VkSurfaceKHR get() {
-        return _surface;
-    }
+    operator VkSurfaceKHR() const { return _surface; }
 
  private:
     VkSurfaceKHR _surface;

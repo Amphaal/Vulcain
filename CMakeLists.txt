@@ -34,7 +34,7 @@ set(CMAKE_C_STANDARD 11)
 #############
 
 add_executable(Vulcain 
-    src/engine/IRegenerable.cpp
+    src/engine/common/IRegenerable.cpp
     src/engine/Renderer.cpp
     src/main.cpp
 )
@@ -91,6 +91,13 @@ target_include_directories(Vulcain PUBLIC
         GLM_FORCE_RADIANS
         GLM_FORCE_DEPTH_ZERO_TO_ONE
     )
+
+#
+# SPIR-V Cross (Reflexion)
+#
+
+    find_package(spirv_cross_core REQUIRED)
+    target_link_libraries(Vulcain PRIVATE spirv-cross-core)
 
 #
 # SPIR-V ShaderFoundry

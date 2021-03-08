@@ -19,35 +19,32 @@
 
 #pragma once
 
-#include "PipelineBuilder.hpp"
-#include "ShaderFoundry.hpp"
+#include "helpers/PipelineBuilder.hpp"
+#include "helpers/ShaderFoundry.hpp"
 #include "Renderpass.hpp"
 
 namespace Vulcain {
 
-class Pipeline {
+class Pipeline : public DeviceBound {
  public:
-    Pipeline(Renderpass* renderpass, const ShaderFoundry::Modules& modules) : _device(renderpass->swapchain()->device()) {
+    Pipeline(Renderpass* renderpass, const ShaderFoundry::Modules& modules) : DeviceBound(renderpass) {
         _createDescriptors();
         _createLayout();
         _createPipeline(renderpass->swapchain(), renderpass, modules);
     }
 
-    VkPipeline get() const {
-        return _pipeline;
-    }
+    operator VkPipeline() const { return _pipeline; }
 
     ~Pipeline() {
-        vkDestroyPipeline(_device->get(), _pipeline, nullptr);
-        vkDestroyPipelineLayout(_device->get(), _layout, nullptr);
-        vkDestroyDescriptorSetLayout(_device->get(), _descriptorSetLayout, nullptr);
+        vkDestroyPipeline(*_device, _pipeline, nullptr);
+        vkDestroyPipelineLayout(*_device, _layout, nullptr);
+        vkDestroyDescriptorSetLayout(*_device, _descriptorSetLayout, nullptr);
     }
  
  private:
     VkPipeline _pipeline;
     VkPipelineLayout _layout;
     VkDescriptorSetLayout _descriptorSetLayout;
-    Device* _device = nullptr;
 
     void _createPipeline(Swapchain* swapchain, Renderpass* renderpass, const ShaderFoundry::Modules& modules) {
         //
@@ -67,13 +64,13 @@ class Pipeline {
         pipelineInfo.pColorBlendState = &builder.colorBlending;
         pipelineInfo.pDynamicState = &builder.dynamicState; // Optional
         pipelineInfo.layout = _layout;
-        pipelineInfo.renderPass = renderpass->get();
+        pipelineInfo.renderPass = *renderpass;
         pipelineInfo.subpass = 0;
         pipelineInfo.basePipelineHandle = VK_NULL_HANDLE; // Optional
         pipelineInfo.basePipelineIndex = -1; // Optional
 
         //
-        auto result = vkCreateGraphicsPipelines(_device->get(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &_pipeline);
+        auto result = vkCreateGraphicsPipelines(*_device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &_pipeline);
         assert(result == VK_SUCCESS);
     }
 
@@ -86,7 +83,7 @@ class Pipeline {
         layoutInfo.bindingCount = 1;
         layoutInfo.pBindings = &uboLayoutBinding;
 
-        auto result = vkCreateDescriptorSetLayout(_device->get(), &layoutInfo, nullptr, &_descriptorSetLayout);
+        auto result = vkCreateDescriptorSetLayout(*_device, &layoutInfo, nullptr, &_descriptorSetLayout);
         assert(result == VK_SUCCESS);
     }
 
@@ -99,7 +96,7 @@ class Pipeline {
         pipelineLayoutInfo.pushConstantRangeCount = 0; // Optional
         pipelineLayoutInfo.pPushConstantRanges = nullptr; // Optional
 
-        auto result = vkCreatePipelineLayout(_device->get(), &pipelineLayoutInfo, nullptr, &_layout);
+        auto result = vkCreatePipelineLayout(*_device, &pipelineLayoutInfo, nullptr, &_layout);
         assert(result == VK_SUCCESS);
     }
 };

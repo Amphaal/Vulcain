@@ -25,15 +25,15 @@
 
 namespace Vulcain {
 
-class CommandPool : public IRegenerable {
+class CommandPool : public DeviceBound, public IRegenerable {
  public:
-    CommandPool(ImageViews* views) : IRegenerable(views), _views(views) {       
+    CommandPool(ImageViews* views) : DeviceBound(views), IRegenerable(views), _views(views) {       
         _createCommandPool();
         _gen();
     }
 
     ~CommandPool() {
-        vkDestroyCommandPool(device()->get(), _commandPool, nullptr);
+        vkDestroyCommandPool(*_device, _commandPool, nullptr);
     }
 
     void record(std::function<void(VkCommandBuffer)> commands) {
@@ -45,16 +45,10 @@ class CommandPool : public IRegenerable {
         return _views;
     }
 
-    VkCommandPool get() const {
-         return _commandPool;
-    }
+    operator VkCommandPool() const { return _commandPool; }
 
     VkCommandBuffer commandBuffer(int index) const {
         return _commandBuffers[index];
-    }
-
-    Device* device() const {
-        return _views->renderpass()->swapchain()->device();
     }
 
  private:
@@ -77,7 +71,7 @@ class CommandPool : public IRegenerable {
             //
             VkRenderPassBeginInfo renderPassInfo{};
             renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-            renderPassInfo.renderPass = _views->renderpass()->get();
+            renderPassInfo.renderPass = *_views->renderpass();
             renderPassInfo.framebuffer = _views->framebuffer(i);
             renderPassInfo.renderArea.offset = {0, 0};
             renderPassInfo.renderArea.extent = _views->renderpass()->swapchain()->imageExtent;
@@ -108,9 +102,9 @@ class CommandPool : public IRegenerable {
         //
         VkCommandPoolCreateInfo poolInfo{};
         poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-        poolInfo.queueFamilyIndex = device()->queueIndex();
+        poolInfo.queueFamilyIndex = _device->queueIndex();
         poolInfo.flags = 0; // Optional
-        auto result = vkCreateCommandPool(device()->get(), &poolInfo, nullptr, &_commandPool);
+        auto result = vkCreateCommandPool(*_device, &poolInfo, nullptr, &_commandPool);
         assert(result == VK_SUCCESS);
     }
 
@@ -126,7 +120,7 @@ class CommandPool : public IRegenerable {
         allocInfo.commandBufferCount = (uint32_t) _commandBuffers.size();
 
         //
-        auto result = vkAllocateCommandBuffers(device()->get(), &allocInfo, _commandBuffers.data());
+        auto result = vkAllocateCommandBuffers(*_device, &allocInfo, _commandBuffers.data());
         assert(result == VK_SUCCESS);
     }
 
@@ -136,7 +130,7 @@ class CommandPool : public IRegenerable {
     }
 
     void _degen() final {
-        vkFreeCommandBuffers(device()->get(), _commandPool, static_cast<uint32_t>(_commandBuffers.size()), _commandBuffers.data());
+        vkFreeCommandBuffers(*_device, _commandPool, static_cast<uint32_t>(_commandBuffers.size()), _commandBuffers.data());
     }
 };
 

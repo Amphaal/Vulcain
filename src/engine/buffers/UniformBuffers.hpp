@@ -20,7 +20,7 @@
 #pragma once
 
 #include "IBuffer.hpp"
-#include "DescriptorPool.hpp"
+#include "engine/DescriptorPool.hpp"
 
 #include <chrono>
 #include <glm/glm.hpp>
@@ -29,9 +29,9 @@
 namespace Vulcain {
 
 template<class T>
-class UniformBuffers : private std::vector<IBuffer>, public IRegenerable {
+class UniformBuffers : private std::vector<IBuffer>, public DeviceBound, public IRegenerable {
  public:
-    UniformBuffers(DescriptorPool* descrPool) : IRegenerable(views), _device(views->renderpass()->swapchain()->device()), _views(descrPool->views()) {
+    UniformBuffers(DescriptorPool* descrPool) : DeviceBound(descrPool), IRegenerable(descrPool), _views(descrPool->views()) {
         _gen();
     }
 
@@ -52,7 +52,6 @@ class UniformBuffers : private std::vector<IBuffer>, public IRegenerable {
     }
 
  private:
-    Device* _device = nullptr;
     ImageViews* _views = nullptr;
 
     void _mapToMemory(uint32_t currentImage, const UBO_MVP& ubo) {
@@ -60,16 +59,16 @@ class UniformBuffers : private std::vector<IBuffer>, public IRegenerable {
 
         //
         void* data;
-        vkMapMemory(_device->get(), buffer, 0, sizeof(ubo), 0, &data);
+        vkMapMemory(*_device, buffer, 0, sizeof(ubo), 0, &data);
             memcpy(data, &ubo, sizeof(ubo));
-        vkUnmapMemory(_device->get(), buffer);
+        vkUnmapMemory(*_device, buffer);
     }
     
     void _gen() final {
         VkDeviceSize bufferSize = sizeof(T);
         for(int i = 0; i < _views->count(); i++) {
             this->emplace_back(
-                _device, 
+                this, 
                 bufferSize,
                 VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, 
                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT

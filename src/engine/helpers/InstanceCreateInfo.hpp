@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "Debug.hpp"
+#include "engine/common/Debug.hpp"
 
 #include <GLFW/glfw3.h>
 

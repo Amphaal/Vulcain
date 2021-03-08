@@ -19,9 +19,9 @@
 
 #pragma once
 
-#include "Vulcain.h"
+#include "common/Vulcain.h"
 
-#include "DeviceDetails.hpp"
+#include "helpers/DeviceDetails.hpp"
 
 namespace Vulcain {
 
@@ -35,6 +35,8 @@ class Device {
         _instaciateLogicalDevice();
     }
 
+    operator VkDevice() const { return _device; }
+
     ~Device() {
         vkDestroyDevice(_device, nullptr);
     }
@@ -42,10 +44,6 @@ class Device {
     //
     //
     //
-
-    VkDevice get() const {
-        return _device;
-    }
 
     int queueIndex() const {
         return _pDeviceDetails->presentationAndGraphicsQueueIndex;
@@ -59,11 +57,11 @@ class Device {
         return _pDeviceDetails->swapchainDetails;
     }
 
-    Surface* surface() {
+    Surface* surface() const {
         return _pDeviceDetails->surface;
     }
 
-    uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) {
+    uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) const {
         VkPhysicalDeviceMemoryProperties memProperties;
         vkGetPhysicalDeviceMemoryProperties(_pDeviceDetails->pDevice, &memProperties);
 
@@ -133,6 +131,19 @@ class Device {
         // get main queue
         vkGetDeviceQueue(_device, _pDeviceDetails->presentationAndGraphicsQueueIndex, 0, &_presentationAndGraphicsQueue);
     }
+};
+
+class DeviceBound {
+ public:
+    explicit DeviceBound(const Device* device) : _device(device) {
+        assert(_device);
+    }
+    explicit DeviceBound(const DeviceBound* bound) : _device(bound->_device) {
+        assert(bound);
+    }
+
+ protected:
+    const Device* _device = nullptr;
 };
 
 } // namespace Vulcain

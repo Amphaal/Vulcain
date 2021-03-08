@@ -17,19 +17,19 @@
 // for further details. Graphical resources without explicit references to a
 // different license and copyright still refer to this GPL.
 
-#include "engine/Vulcain.h"
+#include "engine/common/Vulcain.h"
 
 #include "engine/Renderer.h"
 #include "engine/Pipeline.hpp"
-#include "engine/DevicePicker.hpp"
+#include "engine/helpers/DevicePicker.hpp"
 
-#include "engine/StaticBuffer.hpp"
-#include "engine/UniformBuffers.hpp"
+#include "engine/buffers/StaticBuffer.hpp"
+#include "engine/buffers/UniformBuffers.hpp"
 #include "engine/DescriptorPool.hpp"
 
-using namespace Vulcain;
-
 int main() {
+    using namespace Vulcain;
+
     #ifdef USES_VOLK
     auto result = volkInitialize();
     assert(result == VK_SUCCESS);
@@ -68,7 +68,7 @@ int main() {
     });
 
     cmdPool.record([&basicPipeline, &vertexes, &indexes](VkCommandBuffer cmdBuf) {
-        vkCmdBindPipeline(cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, basicPipeline.get());
+        vkCmdBindPipeline(cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, basicPipeline);
         
         VkBuffer vertexBuffers[] = {vertexes.buffer};
         VkDeviceSize offsets[] = {0};

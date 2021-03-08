@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "Device.hpp"
+#include "engine/Device.hpp"
 
 #include <map>
 
@@ -113,17 +113,17 @@ class DevicePicker {
         }
 
         //
-        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(details.pDevice, surface->get(), &details.swapchainDetails.capabilities);
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(details.pDevice, *surface, &details.swapchainDetails.capabilities);
 
         //
         {
             uint32_t formatCount;
-            vkGetPhysicalDeviceSurfaceFormatsKHR(details.pDevice, surface->get(), &formatCount, nullptr);
+            vkGetPhysicalDeviceSurfaceFormatsKHR(details.pDevice, *surface, &formatCount, nullptr);
             if (formatCount != 0) {
                 details.swapchainDetails.formats.resize(formatCount);
                 vkGetPhysicalDeviceSurfaceFormatsKHR(
                     details.pDevice, 
-                    surface->get(), 
+                    *surface, 
                     &formatCount, 
                     details.swapchainDetails.formats.data()
                 );
@@ -134,12 +134,12 @@ class DevicePicker {
         //
         {
             uint32_t presentModeCount;
-            vkGetPhysicalDeviceSurfacePresentModesKHR(details.pDevice, surface->get(), &presentModeCount, nullptr);
+            vkGetPhysicalDeviceSurfacePresentModesKHR(details.pDevice, *surface, &presentModeCount, nullptr);
             if (presentModeCount != 0) {
                 details.swapchainDetails.presentModes.resize(presentModeCount);
                 vkGetPhysicalDeviceSurfacePresentModesKHR(
                     details.pDevice, 
-                    surface->get(), 
+                    *surface, 
                     &presentModeCount, 
                     details.swapchainDetails.presentModes.data()
                 );
@@ -167,7 +167,7 @@ class DevicePicker {
             
             // check if queue can do presentation
             VkBool32 presentSupport = false;
-            vkGetPhysicalDeviceSurfaceSupportKHR(details.pDevice, i, surface->get(), &presentSupport);
+            vkGetPhysicalDeviceSurfaceSupportKHR(details.pDevice, i, *surface, &presentSupport);
             if (!presentSupport) continue;
 
             // set this potent queue

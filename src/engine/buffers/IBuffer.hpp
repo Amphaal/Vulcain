@@ -19,11 +19,11 @@
 
 #pragma once
 
-#include "Device.hpp"
+#include "engine/Device.hpp"
 
 namespace Vulcain {
 
-class IBuffer {
+class IBuffer : public DeviceBound {
  public:
     const VkDeviceSize bufferSize;
 
@@ -31,10 +31,10 @@ class IBuffer {
     VkDeviceMemory bufferMemory;
 
     IBuffer duplicate(VkBufferUsageFlags usage, VkMemoryPropertyFlags properties) {
-        return IBuffer(this->_device, this->bufferSize, usage, properties);
+        return IBuffer(this, this->bufferSize, usage, properties);
     }
 
-    IBuffer(Device* device, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties) : _device(device), bufferSize(size) {
+    IBuffer(const DeviceBound* deviceBound, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties) : DeviceBound(deviceBound), bufferSize(size) {
         //
         VkBufferCreateInfo bufferInfo{};
         bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -43,36 +43,36 @@ class IBuffer {
         bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
         //
-        auto error = vkCreateBuffer(device->get(), &bufferInfo, nullptr, &buffer);
+        auto error = vkCreateBuffer(*_device, &bufferInfo, nullptr, &buffer);
         assert(!error);
 
         //
         VkMemoryRequirements memRequirements;
-        vkGetBufferMemoryRequirements(device->get(), buffer, &memRequirements);
+        vkGetBufferMemoryRequirements(*_device, buffer, &memRequirements);
         
         //
         VkMemoryAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         allocInfo.allocationSize = memRequirements.size;
-        allocInfo.memoryTypeIndex = device->findMemoryType(memRequirements.memoryTypeBits, properties);
+        allocInfo.memoryTypeIndex = _device->findMemoryType(memRequirements.memoryTypeBits, properties);
         
         //
-        error = vkAllocateMemory(device->get(), &allocInfo, nullptr, &bufferMemory);
+        error = vkAllocateMemory(*_device, &allocInfo, nullptr, &bufferMemory);
         assert(!error);
 
         //
-        vkBindBufferMemory(device->get(), buffer, bufferMemory, 0);
+        vkBindBufferMemory(*_device, buffer, bufferMemory, 0);
     }
 
     void copyBuffer(CommandPool* pool, IBuffer& dstBuffer) {
         VkCommandBufferAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
         allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        allocInfo.commandPool = pool->get();
+        allocInfo.commandPool = *pool;
         allocInfo.commandBufferCount = 1;
 
         VkCommandBuffer commandBuffer;
-        vkAllocateCommandBuffers(pool->device()->get(), &allocInfo, &commandBuffer);
+        vkAllocateCommandBuffers(*_device, &allocInfo, &commandBuffer);
 
         VkCommandBufferBeginInfo beginInfo{};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -91,26 +91,23 @@ class IBuffer {
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = &commandBuffer;
 
-        vkQueueSubmit(pool->device()->queue(), 1, &submitInfo, VK_NULL_HANDLE);
-        vkQueueWaitIdle(pool->device()->queue());
+        vkQueueSubmit(_device->queue(), 1, &submitInfo, VK_NULL_HANDLE);
+        vkQueueWaitIdle(_device->queue());
 
-        vkFreeCommandBuffers(pool->device()->get(), pool->get(), 1, &commandBuffer);
+        vkFreeCommandBuffers(*_device, *pool, 1, &commandBuffer);
     }
 
     ~IBuffer() {
-        vkDestroyBuffer(_device->get(), buffer, nullptr);
-        vkFreeMemory(_device->get(), bufferMemory, nullptr);
+        vkDestroyBuffer(*_device, buffer, nullptr);
+        vkFreeMemory(*_device, bufferMemory, nullptr);
     }
-
- protected:
-    Device* _device = nullptr;
 };
 
 template<typename T>
 class IVerticeBuffer : public IBuffer {
  public:
-    IVerticeBuffer(Device* device, T vertices, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties) : IBuffer(
-            device, 
+    IVerticeBuffer(DeviceBound* deviceBound, T vertices, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties) : IBuffer(
+            deviceBound, 
             _getBufferSize(vertices), 
             usage,
             properties
@@ -139,9 +136,9 @@ class IVerticeBuffer : public IBuffer {
     void _mapVerticesToMemory(VkDeviceMemory memory) {
         //
         void* data;
-        vkMapMemory(_device->get(), memory, 0, this->bufferSize, 0, &data);
+        vkMapMemory(*_device, memory, 0, this->bufferSize, 0, &data);
         memcpy(data, _vertices.data(), (size_t) this->bufferSize);
-        vkUnmapMemory(_device->get(), memory);
+        vkUnmapMemory(*_device, memory);
     }
 };
 

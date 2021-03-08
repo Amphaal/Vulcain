@@ -20,13 +20,13 @@
 #pragma once
 
 #include "Device.hpp"
-#include "IRegenerable.h"
+#include "common/IRegenerable.h"
 
 namespace Vulcain {
 
-class Swapchain : public VkSwapchainCreateInfoKHR, public IRegenerator {
+class Swapchain : public VkSwapchainCreateInfoKHR, public DeviceBound, public IRegenerator {
  public:
-    Swapchain(Device* device) : VkSwapchainCreateInfoKHR{}, _device(device) {
+    Swapchain(Device* device) : VkSwapchainCreateInfoKHR{}, DeviceBound(device) {
         //
         auto const &swapChainSupport = _device->swapchainDetails();
         const auto swapSurfaceFormat = swapChainSupport.getSwapSurfaceFormat();
@@ -39,7 +39,7 @@ class Swapchain : public VkSwapchainCreateInfoKHR, public IRegenerator {
         }
 
         this->sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-        this->surface = _device->surface()->get();
+        this->surface = *_device->surface();
         this->minImageCount = imageCount;
         this->imageFormat = swapSurfaceFormat.format;
         this->imageColorSpace = swapSurfaceFormat.colorSpace;
@@ -59,13 +59,7 @@ class Swapchain : public VkSwapchainCreateInfoKHR, public IRegenerator {
         _gen();
     }
 
-    VkSwapchainKHR get() const {
-        return _swapChain;
-    }
-
-    Device* device() const {
-        return _device;
-    }
+    operator VkSwapchainKHR() const { return _swapChain; }
 
     std::vector<VkImage> images() const {
         return _swapChainImages;
@@ -99,7 +93,6 @@ class Swapchain : public VkSwapchainCreateInfoKHR, public IRegenerator {
 
  private:
     VkSwapchainKHR _swapChain;
-    Device* _device = nullptr;
     std::vector<VkImage> _swapChainImages;
 
     void _gen() final {
@@ -109,19 +102,19 @@ class Swapchain : public VkSwapchainCreateInfoKHR, public IRegenerator {
         this->imageExtent = extent;
 
         // create swapchain...
-        auto result = vkCreateSwapchainKHR(_device->get(), this, nullptr, &_swapChain);
+        auto result = vkCreateSwapchainKHR(*_device, this, nullptr, &_swapChain);
         assert(result == VK_SUCCESS);
 
         // get images
         unsigned int imageCount = 0;
-        vkGetSwapchainImagesKHR(_device->get(), _swapChain, &imageCount, nullptr);
+        vkGetSwapchainImagesKHR(*_device, _swapChain, &imageCount, nullptr);
         assert(imageCount);
         _swapChainImages.resize(imageCount);
-        vkGetSwapchainImagesKHR(_device->get(), _swapChain, &imageCount, _swapChainImages.data());
+        vkGetSwapchainImagesKHR(*_device, _swapChain, &imageCount, _swapChainImages.data());
     }
 
     void _degen() final {
-        vkDestroySwapchainKHR(_device->get(), _swapChain, nullptr);
+        vkDestroySwapchainKHR(*_device, _swapChain, nullptr);
     }
 
 };

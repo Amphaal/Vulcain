@@ -23,9 +23,9 @@
 
 namespace Vulcain {
 
-class DescriptorPool : public IRegenerable {
+class DescriptorPool : public DeviceBound, public IRegenerable {
  public:
-    DescriptorPool(ImageViews *views) : IRegenerable(views), _device(views->renderpass()->swapchain()->device()), _views(views) {
+    DescriptorPool(ImageViews *views) : DeviceBound(views), IRegenerable(views), _views(views) {
         _gen();
     }
 
@@ -38,7 +38,6 @@ class DescriptorPool : public IRegenerable {
     }
 
  private:
-    Device* _device = nullptr;
     ImageViews* _views = nullptr;
     VkDescriptorPool _descriptorPool;
     uint32_t _count = 0;
@@ -54,12 +53,12 @@ class DescriptorPool : public IRegenerable {
         poolInfo.pPoolSizes = &poolSize;
         poolInfo.maxSets = poolSize.descriptorCount;
 
-        auto result = vkCreateDescriptorPool(_device->get(), &poolInfo, nullptr, &_descriptorPool);
+        auto result = vkCreateDescriptorPool(*_device, &poolInfo, nullptr, &_descriptorPool);
         assert(result == VK_SUCCESS);
     }
 
     void _degen() final {
-        vkDestroyDescriptorPool(_device->get(), _descriptorPool, nullptr);
+        vkDestroyDescriptorPool(*_device, _descriptorPool, nullptr);
     }
 };
 

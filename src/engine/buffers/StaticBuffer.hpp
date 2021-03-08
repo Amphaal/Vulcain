@@ -27,7 +27,7 @@ template<class T, VkBufferUsageFlagBits q>
 class IStaticBuffer : public IVerticeBuffer<const T> {
  public:
     IStaticBuffer(CommandPool* pool, const T vertices) : IVerticeBuffer<const T>(
-        pool->device(), 
+        pool, 
         vertices, 
         VK_BUFFER_USAGE_TRANSFER_DST_BIT | q, 
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT

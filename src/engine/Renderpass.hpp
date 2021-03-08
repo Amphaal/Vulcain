@@ -23,9 +23,9 @@
 
 namespace Vulcain {
 
-class Renderpass : public IRegenerable {
+class Renderpass : public DeviceBound, public IRegenerable {
  public:
-    Renderpass(Swapchain* swapchain) : IRegenerable(swapchain), _swapchain(swapchain) {
+    Renderpass(Swapchain* swapchain) : DeviceBound(swapchain), IRegenerable(swapchain), _swapchain(swapchain) {
         //
         _colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
         _colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
@@ -61,9 +61,7 @@ class Renderpass : public IRegenerable {
         _gen();
     }
 
-    VkRenderPass get() const {
-        return _renderPass;
-    }
+    operator VkRenderPass() const { return _renderPass; }
 
     Swapchain* swapchain() const {
         return _swapchain;
@@ -88,12 +86,12 @@ class Renderpass : public IRegenerable {
         _colorAttachment.format = _swapchain->imageFormat;
 
         // create
-        auto result = vkCreateRenderPass(_swapchain->device()->get(), &_renderPassInfo, nullptr, &_renderPass);
+        auto result = vkCreateRenderPass(*_device, &_renderPassInfo, nullptr, &_renderPass);
         assert(result == VK_SUCCESS);
     }
 
     void _degen() final {
-        vkDestroyRenderPass(_swapchain->device()->get(), _renderPass, nullptr);
+        vkDestroyRenderPass(*_device, _renderPass, nullptr);
     }
 };
 

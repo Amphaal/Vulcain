@@ -19,7 +19,7 @@
 
 #include "Renderer.h"
 
-Vulcain::Renderer::Renderer(CommandPool* pool, Vulcain::GlfwWindow* window) : _pool(pool), _window(window) {
+Vulcain::Renderer::Renderer(CommandPool* pool, Vulcain::GlfwWindow* window) : DeviceBound(pool), _pool(pool), _window(window) {
     _createSyncObjects();
     
     //
@@ -29,13 +29,13 @@ Vulcain::Renderer::Renderer(CommandPool* pool, Vulcain::GlfwWindow* window) : _p
 
 Vulcain::Renderer::~Renderer() {
     // wait for device to stop processing
-    vkDeviceWaitIdle(_device()->get());
+    vkDeviceWaitIdle(*_device);
 
     //
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-        vkDestroySemaphore(_device()->get(), _renderFinishedSemaphores[i], nullptr);
-        vkDestroySemaphore(_device()->get(), _imageAvailableSemaphores[i], nullptr);
-        vkDestroyFence    (_device()->get(), _inFlightFences[i], nullptr);
+        vkDestroySemaphore(*_device, _renderFinishedSemaphores[i], nullptr);
+        vkDestroySemaphore(*_device, _imageAvailableSemaphores[i], nullptr);
+        vkDestroyFence    (*_device, _inFlightFences[i], nullptr);
     }
 }
 
@@ -45,15 +45,15 @@ void Vulcain::Renderer::bindUniformBufferUpdater(std::function<void(uint32_t)> u
 
 void Vulcain::Renderer::draw() {
     // wait fences from previous draw call
-    vkWaitForFences(_device()->get(), 1, &_inFlightFences[_currentFrame], VK_TRUE, UINT64_MAX);
+    vkWaitForFences(*_device, 1, &_inFlightFences[_currentFrame], VK_TRUE, UINT64_MAX);
 
     uint32_t imageIndex;
     VkResult result;
 
     // acquire image
     result = vkAcquireNextImageKHR(
-        _device()->get(), 
-        _swapchain()->get(), 
+        *_device, 
+        *_swapchain(), 
         UINT64_MAX, 
         _imageAvailableSemaphores[_currentFrame], 
         VK_NULL_HANDLE, 
@@ -73,7 +73,7 @@ void Vulcain::Renderer::draw() {
 
     // if has an image in fight has fence on index, wait for it to be processed
     if (_imagesInFlight[imageIndex] != VK_NULL_HANDLE) {
-        vkWaitForFences(_device()->get(), 1, &_imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
+        vkWaitForFences(*_device, 1, &_imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
     }
     _imagesInFlight[imageIndex] = _inFlightFences[_currentFrame];
 
@@ -95,9 +95,9 @@ void Vulcain::Renderer::draw() {
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = signalSemaphores;
 
-    vkResetFences(_device()->get(), 1, &_inFlightFences[_currentFrame]);
+    vkResetFences(*_device, 1, &_inFlightFences[_currentFrame]);
 
-    result = vkQueueSubmit(_device()->queue(), 1, &submitInfo, _inFlightFences[_currentFrame]);
+    result = vkQueueSubmit(_device->queue(), 1, &submitInfo, _inFlightFences[_currentFrame]);
     assert(result == VK_SUCCESS);
 
     VkPresentInfoKHR presentInfo{};
@@ -105,14 +105,14 @@ void Vulcain::Renderer::draw() {
     presentInfo.waitSemaphoreCount = 1;
     presentInfo.pWaitSemaphores = signalSemaphores;
 
-    VkSwapchainKHR swapChains[] = {_swapchain()->get()};
+    VkSwapchainKHR swapChains[] = {*_swapchain()};
     presentInfo.swapchainCount = 1;
     presentInfo.pSwapchains = swapChains;
     presentInfo.pImageIndices = &imageIndex;
     presentInfo.pResults = nullptr; // Optional
 
     // present queue results
-    result = vkQueuePresentKHR(_device()->queue(), &presentInfo);
+    result = vkQueuePresentKHR(_device->queue(), &presentInfo);
 
     // check if framebuffer has been resized or swapchain image size suboptimal
     if(result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || _hasFramebufferResized) {
@@ -140,19 +140,15 @@ void Vulcain::Renderer::_createSyncObjects() {
     fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-        auto r1 = vkCreateSemaphore(_device()->get(), &semaphoreInfo, nullptr, &_imageAvailableSemaphores[i]);
+        auto r1 = vkCreateSemaphore(*_device, &semaphoreInfo, nullptr, &_imageAvailableSemaphores[i]);
         assert(r1 == VK_SUCCESS);
         
-        auto r2 = vkCreateSemaphore(_device()->get(), &semaphoreInfo, nullptr, &_renderFinishedSemaphores[i]);
+        auto r2 = vkCreateSemaphore(*_device, &semaphoreInfo, nullptr, &_renderFinishedSemaphores[i]);
         assert(r2 == VK_SUCCESS);
         
-        auto r3 = vkCreateFence    (_device()->get(), &fenceInfo,     nullptr, &_inFlightFences[i]);
+        auto r3 = vkCreateFence    (*_device, &fenceInfo,     nullptr, &_inFlightFences[i]);
         assert(r3 == VK_SUCCESS);
     }
-}
-
-Vulcain::Device* Vulcain::Renderer::_device() const {
-    return _pool->views()->renderpass()->swapchain()->device();
 }
 
 Vulcain::Swapchain* Vulcain::Renderer::_swapchain() const {
@@ -164,7 +160,7 @@ void Vulcain::Renderer::_regenerateSwapChain() {
     _window->waitUntilSwapchainIsLegal();
 
     // wait
-    vkDeviceWaitIdle(_device()->get());
+    vkDeviceWaitIdle(*_device);
 
     // regenerate chain
     _swapchain()->regenerate();
