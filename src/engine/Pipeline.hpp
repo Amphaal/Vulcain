@@ -28,6 +28,7 @@ namespace Vulcain {
 class Pipeline {
  public:
     Pipeline(Renderpass* renderpass, const ShaderFoundry::Modules& modules) : _device(renderpass->swapchain()->device()) {
+        _createDescriptors();
         _createLayout();
         _createPipeline(renderpass->swapchain(), renderpass, modules);
     }
@@ -39,11 +40,13 @@ class Pipeline {
     ~Pipeline() {
         vkDestroyPipeline(_device->get(), _pipeline, nullptr);
         vkDestroyPipelineLayout(_device->get(), _layout, nullptr);
+        vkDestroyDescriptorSetLayout(_device->get(), _descriptorSetLayout, nullptr);
     }
  
  private:
     VkPipeline _pipeline;
     VkPipelineLayout _layout;
+    VkDescriptorSetLayout _descriptorSetLayout;
     Device* _device = nullptr;
 
     void _createPipeline(Swapchain* swapchain, Renderpass* renderpass, const ShaderFoundry::Modules& modules) {
@@ -73,12 +76,26 @@ class Pipeline {
         auto result = vkCreateGraphicsPipelines(_device->get(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &_pipeline);
         assert(result == VK_SUCCESS);
     }
-    
+
+    void _createDescriptors() {
+        //
+        auto uboLayoutBinding = UBO_MVP::createDescriptorSetLayout();
+
+        VkDescriptorSetLayoutCreateInfo layoutInfo{};
+        layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        layoutInfo.bindingCount = 1;
+        layoutInfo.pBindings = &uboLayoutBinding;
+
+        auto result = vkCreateDescriptorSetLayout(_device->get(), &layoutInfo, nullptr, &_descriptorSetLayout);
+        assert(result == VK_SUCCESS);
+    }
+
     void _createLayout() {
+        //
         VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        pipelineLayoutInfo.setLayoutCount = 0; // Optional
-        pipelineLayoutInfo.pSetLayouts = nullptr; // Optional
+        pipelineLayoutInfo.setLayoutCount = 1; // Optional
+        pipelineLayoutInfo.pSetLayouts = &_descriptorSetLayout; // Optional
         pipelineLayoutInfo.pushConstantRangeCount = 0; // Optional
         pipelineLayoutInfo.pPushConstantRanges = nullptr; // Optional
 

@@ -39,6 +39,10 @@ Vulcain::Renderer::~Renderer() {
     }
 }
 
+void Vulcain::Renderer::bindUniformBufferUpdater(std::function<void(uint32_t)> updater) {
+    _updateUniformBuffer = updater;
+}
+
 void Vulcain::Renderer::draw() {
     // wait fences from previous draw call
     vkWaitForFences(_device()->get(), 1, &_inFlightFences[_currentFrame], VK_TRUE, UINT64_MAX);
@@ -63,6 +67,9 @@ void Vulcain::Renderer::draw() {
     }
     // still allow submoptimal swapchain
     assert(result == VK_SUCCESS || result == VK_SUBOPTIMAL_KHR);
+
+    // update uniform buffers there if any
+    if(_updateUniformBuffer) _updateUniformBuffer(imageIndex);
 
     // if has an image in fight has fence on index, wait for it to be processed
     if (_imagesInFlight[imageIndex] != VK_NULL_HANDLE) {
@@ -160,5 +167,5 @@ void Vulcain::Renderer::_regenerateSwapChain() {
     vkDeviceWaitIdle(_device()->get());
 
     // regenerate chain
-    _pool->regenerate();
+    _swapchain()->regenerate();
 }

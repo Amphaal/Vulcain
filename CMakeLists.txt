@@ -34,6 +34,7 @@ set(CMAKE_C_STANDARD 11)
 #############
 
 add_executable(Vulcain 
+    src/engine/IRegenerable.cpp
     src/engine/Renderer.cpp
     src/main.cpp
 )

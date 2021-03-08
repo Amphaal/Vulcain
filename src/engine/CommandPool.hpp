@@ -22,7 +22,6 @@
 #include <functional>
 
 #include "ImageViews.hpp"
-#include "IRegenerable.hpp"
 
 namespace Vulcain {
 

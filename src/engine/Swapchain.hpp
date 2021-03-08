@@ -20,13 +20,13 @@
 #pragma once
 
 #include "Device.hpp"
-#include "IRegenerable.hpp"
+#include "IRegenerable.h"
 
 namespace Vulcain {
 
-class Swapchain : public VkSwapchainCreateInfoKHR, public IRegenerable {
+class Swapchain : public VkSwapchainCreateInfoKHR, public IRegenerator {
  public:
-    Swapchain(Device* device) : VkSwapchainCreateInfoKHR{}, IRegenerable(nullptr), _device(device) {
+    Swapchain(Device* device) : VkSwapchainCreateInfoKHR{}, _device(device) {
         //
         auto const &swapChainSupport = _device->swapchainDetails();
         const auto swapSurfaceFormat = swapChainSupport.getSwapSurfaceFormat();

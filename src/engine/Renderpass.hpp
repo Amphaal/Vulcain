@@ -20,7 +20,6 @@
 #pragma once
 
 #include "Swapchain.hpp"
-#include "IRegenerable.hpp"
 
 namespace Vulcain {
 

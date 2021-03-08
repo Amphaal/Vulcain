@@ -17,10 +17,9 @@
 // for further details. Graphical resources without explicit references to a
 // different license and copyright still refer to this GPL.
 
-#pragma onceZ
+#pragma once
 
 #include "Renderpass.hpp"
-#include "IRegenerable.hpp"
 
 namespace Vulcain {
 

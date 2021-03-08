@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "Buffer.hpp"
+#include "Vulcain.h"
 
 namespace Vulcain {
 
@@ -34,19 +34,18 @@ struct PipelineBuilder {
     VkPipelineColorBlendStateCreateInfo colorBlending{};
     VkPipelineDepthStencilStateCreateInfo depthStencilState{};
     VkPipelineDynamicStateCreateInfo dynamicState{};
-    VkVertexInputBindingDescription bindingDescr;
-    std::array<VkVertexInputAttributeDescription, 2> attrDescr;
+    VkDescriptorSetLayoutCreateInfo layoutInfo{};
 
     PipelineBuilder() {
         //
         vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-            bindingDescr = Vertex::getBindingDescription();
+            _bindingDescr = Vertex::getBindingDescription();
             vertexInputInfo.vertexBindingDescriptionCount = 1;
-            vertexInputInfo.pVertexBindingDescriptions = &bindingDescr; // Optional
+            vertexInputInfo.pVertexBindingDescriptions = &_bindingDescr; // Optional
 
-            attrDescr = Vertex::getAttributeDescriptions();
-            vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attrDescr.size());
-            vertexInputInfo.pVertexAttributeDescriptions = attrDescr.data(); // Optional
+            _attrDescr = Vertex::getAttributeDescriptions();
+            vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(_attrDescr.size());
+            vertexInputInfo.pVertexAttributeDescriptions = _attrDescr.data(); // Optional
 
         //
         inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -65,7 +64,7 @@ struct PipelineBuilder {
         rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
         rasterizer.lineWidth = 1.0f;
         rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-        rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
+        rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
         rasterizer.depthBiasEnable = VK_FALSE;
         rasterizer.depthBiasConstantFactor = 0.0f; // Optional
         rasterizer.depthBiasClamp = 0.0f; // Optional
@@ -115,6 +114,9 @@ struct PipelineBuilder {
         VK_DYNAMIC_STATE_VIEWPORT,
         VK_DYNAMIC_STATE_SCISSOR
     };
+
+    VkVertexInputBindingDescription _bindingDescr;
+    std::array<VkVertexInputAttributeDescription, 2> _attrDescr;
 };
 
 } // namespace Vulcain

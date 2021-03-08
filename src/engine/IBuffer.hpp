@@ -20,53 +20,21 @@
 #pragma once
 
 #include "Device.hpp"
-#include "CommandPool.hpp"
-
-#include <glm/vec4.hpp>
-#include <glm/mat4x4.hpp>
 
 namespace Vulcain {
 
-struct Vertex {
-    glm::vec2 pos;
-    glm::vec3 color;
-
-    static VkVertexInputBindingDescription getBindingDescription() {
-        VkVertexInputBindingDescription bindingDescription{};
-        bindingDescription.binding = 0;
-        bindingDescription.stride = sizeof(Vertex);
-        bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-        return bindingDescription;
-    }
-
-    static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions() {
-        std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
-        attributeDescriptions[0].binding = 0;
-        attributeDescriptions[0].location = 0;
-        attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
-        attributeDescriptions[0].offset = offsetof(Vertex, pos);
-
-        attributeDescriptions[1].binding = 0;
-        attributeDescriptions[1].location = 1;
-        attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-        attributeDescriptions[1].offset = offsetof(Vertex, color);
-
-        return attributeDescriptions;
-    }
-};
-
-struct BaseBuffer {
+class IBuffer {
  public:
     const VkDeviceSize bufferSize;
 
     VkBuffer buffer;
     VkDeviceMemory bufferMemory;
 
-    BaseBuffer duplicate(VkBufferUsageFlags usage, VkMemoryPropertyFlags properties) {
-        return BaseBuffer(this->_device, this->bufferSize, usage, properties);
+    IBuffer duplicate(VkBufferUsageFlags usage, VkMemoryPropertyFlags properties) {
+        return IBuffer(this->_device, this->bufferSize, usage, properties);
     }
 
-    BaseBuffer(Device* device, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties) : _device(device), bufferSize(size) {
+    IBuffer(Device* device, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties) : _device(device), bufferSize(size) {
         //
         VkBufferCreateInfo bufferInfo{};
         bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -96,7 +64,7 @@ struct BaseBuffer {
         vkBindBufferMemory(device->get(), buffer, bufferMemory, 0);
     }
 
-    void copyBuffer(CommandPool* pool, BaseBuffer& dstBuffer) {
+    void copyBuffer(CommandPool* pool, IBuffer& dstBuffer) {
         VkCommandBufferAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
         allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
@@ -129,7 +97,7 @@ struct BaseBuffer {
         vkFreeCommandBuffers(pool->device()->get(), pool->get(), 1, &commandBuffer);
     }
 
-    ~BaseBuffer() {
+    ~IBuffer() {
         vkDestroyBuffer(_device->get(), buffer, nullptr);
         vkFreeMemory(_device->get(), bufferMemory, nullptr);
     }
@@ -138,15 +106,10 @@ struct BaseBuffer {
     Device* _device = nullptr;
 };
 
-
-#ifdef WIN32
-auto i = true;
-#endif
-
 template<typename T>
-class IBuffer : public BaseBuffer {
+class IVerticeBuffer : public IBuffer {
  public:
-    IBuffer(Device* device, T vertices, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties) : BaseBuffer(
+    IVerticeBuffer(Device* device, T vertices, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties) : IBuffer(
             device, 
             _getBufferSize(vertices), 
             usage,
@@ -162,7 +125,7 @@ class IBuffer : public BaseBuffer {
     }
  
  protected:
-    void _mapVerticesToMemory(BaseBuffer& buffer) {
+    void _mapVerticesToMemory(IBuffer& buffer) {
         _mapVerticesToMemory(buffer.bufferMemory);
     }
 
@@ -181,31 +144,5 @@ class IBuffer : public BaseBuffer {
         vkUnmapMemory(_device->get(), memory);
     }
 };
-
-template<class T>
-class IStaticBuffer : public IBuffer<const T> {
- public:
-    IStaticBuffer(CommandPool* pool, const T vertices) : IBuffer<const T>(
-        pool->device(), 
-        vertices, 
-        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, 
-        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
-    ) {
-        // create staging buffer
-        auto staging = BaseBuffer::duplicate(
-            VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
-        );
-
-        // map vertice to staging
-        IBuffer<const T>::_mapVerticesToMemory(staging);
-
-        // copy staging to GPU memory
-        staging.copyBuffer(pool, *this);
-    }
-};
-
-template<class T>
-using StaticBuffer = IStaticBuffer<std::vector<T>>;
 
 } // namespace Vulcain

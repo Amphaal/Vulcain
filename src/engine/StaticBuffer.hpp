@@ -19,38 +19,36 @@
 
 #pragma once
 
-#include <stack>
+#include "IBuffer.hpp"
 
 namespace Vulcain {
 
-class IRegenerable {
+template<class T, VkBufferUsageFlagBits q>
+class IStaticBuffer : public IVerticeBuffer<const T> {
  public:
-    IRegenerable(IRegenerable* chainPredecessor = nullptr) : _chainPredecessor(chainPredecessor) {}
-    
-    void regenerate() {
-        std::stack<IRegenerable*> stack;
+    IStaticBuffer(CommandPool* pool, const T vertices) : IVerticeBuffer<const T>(
+        pool->device(), 
+        vertices, 
+        VK_BUFFER_USAGE_TRANSFER_DST_BIT | q, 
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+    ) {
+        // create staging buffer
+        auto staging = IBuffer::duplicate(
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+        );
 
-        // degen FIFO style
-        auto cp = this;
-        while(cp) {
-           cp->_degen();
-           stack.push(cp);
-           cp = cp->_chainPredecessor;
-        }
+        // map vertice to staging
+        IVerticeBuffer<const T>::_mapVerticesToMemory(staging);
 
-        // gen LIFO style
-        while (!stack.empty()) {
-            stack.top()->_gen();
-            stack.pop();
-        }
+        // copy staging to GPU memory
+        staging.copyBuffer(pool, *this);
     }
- 
- protected:
-    virtual void _gen() = 0;
-    virtual void _degen() = 0;
- 
- private:
-    IRegenerable* _chainPredecessor = nullptr;
 };
+
+template<class T>
+using StaticBuffer = IStaticBuffer<std::vector<T>, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT>;
+
+using StaticIndexBuffer = IStaticBuffer<std::vector<uint16_t>, VK_BUFFER_USAGE_INDEX_BUFFER_BIT>;
 
 } // namespace Vulcain

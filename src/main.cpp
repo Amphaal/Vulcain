@@ -23,6 +23,10 @@
 #include "engine/Pipeline.hpp"
 #include "engine/DevicePicker.hpp"
 
+#include "engine/StaticBuffer.hpp"
+#include "engine/UniformBuffers.hpp"
+#include "engine/DescriptorPool.hpp"
+
 using namespace Vulcain;
 
 int main() {
@@ -43,29 +47,43 @@ int main() {
 
     Swapchain swapchain(&device);
     Renderpass renderpass(&swapchain);
-    ImageViews views(&renderpass);
-    CommandPool cmdPool(&views);
-    
     auto basicPipeline = Pipeline { &renderpass, foundry.modulesFromShaderName("basic") };
+    
+    ImageViews views(&renderpass);
+    DescriptorPool descrPool(&views);
+    UniformBuffers<UBO_MVP> ubo(&descrPool);
 
-    StaticBuffer<Vertex> buffer(&cmdPool, {
+    CommandPool cmdPool(&views);
+
+    StaticBuffer<Vertex> vertexes(&cmdPool, {
         {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
         {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
         {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
         {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
     });
 
-    cmdPool.record([&basicPipeline, &buffer](VkCommandBuffer cmdBuf) {
+    StaticIndexBuffer indexes(&cmdPool, {
+        0, 1, 2,
+        2, 3, 0
+    });
+
+    cmdPool.record([&basicPipeline, &vertexes, &indexes](VkCommandBuffer cmdBuf) {
         vkCmdBindPipeline(cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, basicPipeline.get());
         
-        VkBuffer vertexBuffers[] = {buffer.buffer};
+        VkBuffer vertexBuffers[] = {vertexes.buffer};
         VkDeviceSize offsets[] = {0};
         vkCmdBindVertexBuffers(cmdBuf, 0, 1, vertexBuffers, offsets);
 
-        vkCmdDraw(cmdBuf, buffer.vertexCount(), 1, 0, 0);
+        vkCmdBindIndexBuffer(cmdBuf, indexes.buffer, 0, VK_INDEX_TYPE_UINT16);
+
+        vkCmdDrawIndexed(cmdBuf, indexes.vertexCount(), 1, 0, 0, 0);
     });
 
     Renderer renderer(&cmdPool, &window);
+    renderer.bindUniformBufferUpdater([&ubo](uint32_t currentImage) {
+        ubo.updateUniformBuffer(currentImage);
+    });
+
     window.pollEventsAndDraw();
 
     return 0;

@@ -19,42 +19,34 @@
 
 #pragma once
 
-#include "IDrawer.h"
-#include "CommandPool.hpp"
+#include <stack>
+#include <queue>
 
 namespace Vulcain {
 
-class Renderer : public IDrawer {
+class IRegenerator;
+class IRegenerable {
+ public: 
+    friend class IRegenerator;
+    explicit IRegenerable(IRegenerable* parent);
+ 
+ protected:
+    virtual void _gen() = 0;
+    virtual void _degen() = 0;
+ 
+ private:
+    std::stack<IRegenerable*> _children;
+};
+
+class IRegenerator : public IRegenerable {
  public:
-    Renderer(CommandPool* pool, Vulcain::GlfwWindow* window);
-    ~Renderer();
-
-    void draw() final;
-
-    void bindUniformBufferUpdater(std::function<void(uint32_t)> updater);
+    IRegenerator();
+    void regenerate();
 
  private:
-    static const int MAX_FRAMES_IN_FLIGHT = 2;
-    size_t _currentFrame = 0;
-
-    std::vector<VkSemaphore> _imageAvailableSemaphores;
-    std::vector<VkSemaphore> _renderFinishedSemaphores;
-    std::vector<VkFence> _inFlightFences;
-    std::vector<VkFence> _imagesInFlight;
-
-    std::atomic<bool> _hasFramebufferResized;
-
-    std::function<void(uint32_t)> _updateUniformBuffer;
-
-    CommandPool* _pool = nullptr;
-    Vulcain::GlfwWindow* _window = nullptr;
-
-    void _createSyncObjects();
-
-    Device* _device() const;
-    Swapchain* _swapchain() const;
-
-    void _regenerateSwapChain();
+    void _fillPipes(std::stack<IRegenerable*>& stack, std::queue<IRegenerable*>& queue, IRegenerable* target);
 };
+
+
 
 } // namespace Vulcain
