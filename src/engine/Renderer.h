@@ -26,12 +26,14 @@ namespace Vulcain {
 
 class Renderer : public IDrawer, public DeviceBound {
  public:
+   using BeforeWaitingCurrentImageCallback = std::function<void(uint32_t)>;
+
     Renderer(CommandPool* pool, Vulcain::GlfwWindow* window);
     ~Renderer();
 
     void draw() final;
 
-    void onBeforeWaitingCurrentImage(std::function<void(uint32_t)> cb);
+    void onBeforeWaitingCurrentImage(BeforeWaitingCurrentImageCallback cb);
 
  private:
     static const int MAX_FRAMES_IN_FLIGHT = 2;
@@ -44,7 +46,7 @@ class Renderer : public IDrawer, public DeviceBound {
 
     std::atomic<bool> _hasFramebufferResized;
 
-    std::function<void(uint32_t)> _onBeforeWaitingCurrentImage;
+    BeforeWaitingCurrentImageCallback _onBeforeWaitingCurrentImage;
 
     CommandPool* _cmdPool = nullptr;
     Vulcain::GlfwWindow* _window = nullptr;

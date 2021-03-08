@@ -51,6 +51,14 @@ class Pipeline : public DeviceBound, public IRegenerable {
         auto generated = UBO_MVP::generate(_swapchain);
         _uniformBuffers.mapToMemory(currentImage, generated);
     }
+
+    VkPipelineLayout layout() const {
+        return _layout;
+    }
+
+    const VkDescriptorSet* descriptorSet(uint32_t currentImage) const {
+        return &_descriptorSets[currentImage];
+    }
  
  private:
     VkPipeline _pipeline;

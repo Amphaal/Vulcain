@@ -27,6 +27,8 @@ namespace Vulcain {
 
 class CommandPool : public DeviceBound, public IRegenerable {
  public:
+    using RecordCallback = std::function<void(VkCommandBuffer, size_t)>;
+
     CommandPool(ImageViews* views) : DeviceBound(views), IRegenerable(views), _views(views) {       
         _createCommandPool();
         _gen();
@@ -36,7 +38,7 @@ class CommandPool : public DeviceBound, public IRegenerable {
         vkDestroyCommandPool(*_device, _commandPool, nullptr);
     }
 
-    void record(std::function<void(VkCommandBuffer)> commands) {
+    void record(RecordCallback commands) {
         _recordedCommands = commands;
         _sendCommands();
     }
@@ -53,7 +55,7 @@ class CommandPool : public DeviceBound, public IRegenerable {
 
  private:
     VkCommandPool _commandPool;
-    std::function<void(VkCommandBuffer)> _recordedCommands;
+    RecordCallback _recordedCommands;
     std::vector<VkCommandBuffer> _commandBuffers;
     ImageViews* _views = nullptr;
 
@@ -88,7 +90,7 @@ class CommandPool : public DeviceBound, public IRegenerable {
 
                 vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
                     //
-                    _recordedCommands(commandBuffer);
+                    _recordedCommands(commandBuffer, i);
                     //
                 vkCmdEndRenderPass(commandBuffer);
 

@@ -51,6 +51,8 @@ class UniformBuffers : private std::vector<IBuffer>, public DeviceBound, public 
    
     void _gen() final {
         VkDeviceSize bufferSize = sizeof(T);
+        this->reserve(_swapchain->imagesCount());
+
         for(int i = 0; i < _swapchain->imagesCount(); i++) {
             this->emplace_back(
                 this, 

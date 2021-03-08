@@ -68,7 +68,7 @@ int main() {
         2, 3, 0
     });
 
-    cmdPool.record([&basicPipeline, &vertexes, &indexes](VkCommandBuffer cmdBuf) {
+    cmdPool.record([&basicPipeline, &vertexes, &indexes](VkCommandBuffer cmdBuf, size_t cmdBufIndex) {
         vkCmdBindPipeline(cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, basicPipeline);
         
         VkBuffer vertexBuffers[] = {vertexes.buffer};
@@ -76,6 +76,8 @@ int main() {
         vkCmdBindVertexBuffers(cmdBuf, 0, 1, vertexBuffers, offsets);
 
         vkCmdBindIndexBuffer(cmdBuf, indexes.buffer, 0, VK_INDEX_TYPE_UINT16);
+
+        vkCmdBindDescriptorSets(cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, basicPipeline.layout(), 0, 1, basicPipeline.descriptorSet(cmdBufIndex), 0, nullptr);
 
         vkCmdDrawIndexed(cmdBuf, indexes.vertexCount(), 1, 0, 0, 0);
     });

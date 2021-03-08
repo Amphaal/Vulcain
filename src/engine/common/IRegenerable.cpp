@@ -23,10 +23,18 @@
 
 #include <assert.h>
 
-Vulcain::IRegenerable::IRegenerable(IRegenerable* chainPredecessor) {
-    if (chainPredecessor) {
-        _children.push(chainPredecessor);
+Vulcain::IRegenerable::IRegenerable(IRegenerable* parent) {
+    if (parent) {
+        parent->_children.push(this);
     }
+}
+
+void Vulcain::IRegenerable::_logTree(IRegenerable* target, int level) {
+    // log
+    auto pad = [](int level) {
+        return std::string(level * 2, '-');
+    };
+    std::cout << pad(level) << Debug::demanglePtr(target) << std::endl;
 }
 
 Vulcain::IRegenerator::IRegenerator() : IRegenerable(nullptr) { }
@@ -35,22 +43,16 @@ void Vulcain::IRegenerator::_fillPipes(std::stack<IRegenerable*>& stack, std::qu
     stack.push(target);
     queue.push(target);
 
-        // log
-        auto pad = [](int level) {
-            return std::string(level, '--');
-        };
-        std::cout << pad(level) << Debug::demanglePtr(target) << std::endl;
+    // _logTree(target, level);
         
     if(target->_children.empty()) return;
     auto cp = target->_children;
 
     while (!cp.empty()) {
-        auto child = stack.top();
-        
+        auto child = cp.top();
         cp.pop();
-        level++;
-
-        _fillPipes(stack, queue, child, level);
+        
+        _fillPipes(stack, queue, child, level + 1);
     }
 }
 
@@ -61,13 +63,15 @@ void Vulcain::IRegenerator::regenerate() {
 
     // degen LIFO style
     while (!stack.empty()) {
-        stack.top()->_degen();
+        auto &top = stack.top();
+        top->_degen();
         stack.pop();
     }
 
     // gen FIFO style
     while (!queue.empty()) {
-        queue.front()->_gen();
+        auto &front = queue.front();
+        front->_gen();
         queue.pop();
     }
 }

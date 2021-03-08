@@ -50,7 +50,6 @@ class ImageViews : public DeviceBound, public IRegenerable {
     std::vector<VkImageView> _views;
     std::vector<VkFramebuffer> _fbs;
     Renderpass* _renderpass = nullptr;
-    int _c = 0;
 
     void _pushImageView(Swapchain* swapchain, VkImage swapChainImage, VkImageView* into) {
         //
@@ -99,9 +98,9 @@ class ImageViews : public DeviceBound, public IRegenerable {
         auto swapChainImages = swapchain->images();
         
         //
-        _c = swapChainImages.size();
-        _views.resize(_c);
-        _fbs.resize(_c);
+        auto imgsCount = swapChainImages.size();
+        _views.resize(imgsCount);
+        _fbs.resize(imgsCount);
 
         //
         for(size_t i = 0; i < swapChainImages.size(); i++) {

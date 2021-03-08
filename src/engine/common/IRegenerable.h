@@ -33,6 +33,8 @@ class IRegenerable {
  protected:
     virtual void _gen() = 0;
     virtual void _degen() = 0;
+
+    static void _logTree(IRegenerable* target, int level);
  
  private:
     std::stack<IRegenerable*> _children;
@@ -44,7 +46,7 @@ class IRegenerator : public IRegenerable {
     void regenerate();
 
  private:
-    void _fillPipes(std::stack<IRegenerable*>& stack, std::queue<IRegenerable*>& queue, IRegenerable* target, int level = 0);
+    static void _fillPipes(std::stack<IRegenerable*>& stack, std::queue<IRegenerable*>& queue, IRegenerable* target, int level = 0);
 };
 
 

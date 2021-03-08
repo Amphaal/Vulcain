@@ -40,7 +40,7 @@ Vulcain::Renderer::~Renderer() {
 }
 
 // You might want to set a callback to UBO updates
-void Vulcain::Renderer::onBeforeWaitingCurrentImage(std::function<void(uint32_t)> cb) {
+void Vulcain::Renderer::onBeforeWaitingCurrentImage(BeforeWaitingCurrentImageCallback cb) {
     _onBeforeWaitingCurrentImage = cb;
 }
 
