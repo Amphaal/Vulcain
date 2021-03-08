@@ -22,15 +22,21 @@
 #include "helpers/PipelineBuilder.hpp"
 #include "helpers/ShaderFoundry.hpp"
 #include "Renderpass.hpp"
+#include "DescriptorPool.hpp"
+
+#include "buffers/UniformBuffers.hpp"
+#include "buffers/UBO.hpp"
 
 namespace Vulcain {
 
-class Pipeline : public DeviceBound {
+class Pipeline : public DeviceBound, public IRegenerable {
  public:
-    Pipeline(Renderpass* renderpass, const ShaderFoundry::Modules& modules) : DeviceBound(renderpass) {
-        _createDescriptors();
-        _createLayout();
-        _createPipeline(renderpass->swapchain(), renderpass, modules);
+    Pipeline(Renderpass* renderpass, DescriptorPool* descrPool, const ShaderFoundry::Modules& modules) : 
+        DeviceBound(renderpass), IRegenerable(descrPool), _swapchain(renderpass->swapchain()), _descrPool(descrPool), _uniformBuffers(descrPool) {
+        _createDescriptorSetLayouts();
+        _gen();
+        _createPipelineLayout();
+        _createPipeline(_swapchain, renderpass, modules);
     }
 
     operator VkPipeline() const { return _pipeline; }
@@ -40,11 +46,27 @@ class Pipeline : public DeviceBound {
         vkDestroyPipelineLayout(*_device, _layout, nullptr);
         vkDestroyDescriptorSetLayout(*_device, _descriptorSetLayout, nullptr);
     }
+
+    void updateUniformBuffer(uint32_t currentImage) {
+        auto generated = UBO_MVP::generate(_swapchain);
+        _uniformBuffers.mapToMemory(currentImage, generated);
+    }
  
  private:
     VkPipeline _pipeline;
     VkPipelineLayout _layout;
     VkDescriptorSetLayout _descriptorSetLayout;
+
+    DescriptorPool* _descrPool = nullptr;
+    Swapchain* _swapchain = nullptr;
+    std::vector<VkDescriptorSet> _descriptorSets;
+
+    UniformBuffers<UBO_MVP> _uniformBuffers;
+
+    void _degen() final {}
+    void _gen() final {
+        _createDescriptorSets();
+    }
 
     void _createPipeline(Swapchain* swapchain, Renderpass* renderpass, const ShaderFoundry::Modules& modules) {
         //
@@ -74,7 +96,7 @@ class Pipeline : public DeviceBound {
         assert(result == VK_SUCCESS);
     }
 
-    void _createDescriptors() {
+    void _createDescriptorSetLayouts() {
         //
         auto uboLayoutBinding = UBO_MVP::createDescriptorSetLayout();
 
@@ -87,7 +109,40 @@ class Pipeline : public DeviceBound {
         assert(result == VK_SUCCESS);
     }
 
-    void _createLayout() {
+    void _createDescriptorSets() {
+        auto imgsCount = _swapchain->imagesCount(); 
+        //
+        std::vector<VkDescriptorSetLayout> layouts(imgsCount, _descriptorSetLayout);
+        VkDescriptorSetAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        allocInfo.descriptorPool = *_descrPool;
+        allocInfo.descriptorSetCount = static_cast<uint32_t>(imgsCount);
+        allocInfo.pSetLayouts = layouts.data();
+
+        _descriptorSets.resize(imgsCount);
+        auto result = vkAllocateDescriptorSets(*_device, &allocInfo, _descriptorSets.data());
+        assert(result == VK_SUCCESS);
+
+        for (size_t i = 0; i < imgsCount; i++) {
+            VkDescriptorBufferInfo bufferInfo{};
+            bufferInfo.buffer = _uniformBuffers.buffer(i);
+            bufferInfo.offset = 0;
+            bufferInfo.range = sizeof(UBO_MVP);
+
+            VkWriteDescriptorSet descriptorWrite{};
+            descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            descriptorWrite.dstSet = _descriptorSets[i];
+            descriptorWrite.dstBinding = 0;
+            descriptorWrite.dstArrayElement = 0;
+            descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            descriptorWrite.descriptorCount = 1;
+            descriptorWrite.pBufferInfo = &bufferInfo;
+
+            vkUpdateDescriptorSets(*_device, 1, &descriptorWrite, 0, nullptr);
+        }
+    }
+
+    void _createPipelineLayout() {
         //
         VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;

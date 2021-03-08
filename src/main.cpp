@@ -25,7 +25,8 @@
 
 #include "engine/buffers/StaticBuffer.hpp"
 #include "engine/buffers/UniformBuffers.hpp"
-#include "engine/DescriptorPool.hpp"
+#include "engine/buffers/Vertex.hpp"
+
 
 int main() {
     using namespace Vulcain;
@@ -47,12 +48,12 @@ int main() {
 
     Swapchain swapchain(&device);
     Renderpass renderpass(&swapchain);
-    auto basicPipeline = Pipeline { &renderpass, foundry.modulesFromShaderName("basic") };
+
+    DescriptorPool descrPool(&swapchain);
+
+    auto basicPipeline = Pipeline { &renderpass, &descrPool, foundry.modulesFromShaderName("basic") };
     
     ImageViews views(&renderpass);
-    DescriptorPool descrPool(&views);
-    UniformBuffers<UBO_MVP> ubo(&descrPool);
-
     CommandPool cmdPool(&views);
 
     StaticBuffer<Vertex> vertexes(&cmdPool, {
@@ -80,8 +81,8 @@ int main() {
     });
 
     Renderer renderer(&cmdPool, &window);
-    renderer.bindUniformBufferUpdater([&ubo](uint32_t currentImage) {
-        ubo.updateUniformBuffer(currentImage);
+    renderer.onBeforeWaitingCurrentImage([&basicPipeline](uint32_t currentImage) {
+        basicPipeline.updateUniformBuffer(currentImage);
     });
 
     window.pollEventsAndDraw();

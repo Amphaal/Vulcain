@@ -95,9 +95,9 @@ target_include_directories(Vulcain PUBLIC
 #
 # SPIR-V Cross (Reflexion)
 #
-
-    find_package(spirv_cross_core REQUIRED)
-    target_link_libraries(Vulcain PRIVATE spirv-cross-core)
+    #TODO once llvm 12 is live, statically link
+    find_package(spirv_cross_c_shared REQUIRED)
+    target_link_libraries(Vulcain PRIVATE spirv-cross-c-shared)
 
 #
 # SPIR-V ShaderFoundry

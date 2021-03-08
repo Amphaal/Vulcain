@@ -31,7 +31,7 @@ class Renderer : public IDrawer, public DeviceBound {
 
     void draw() final;
 
-    void bindUniformBufferUpdater(std::function<void(uint32_t)> updater);
+    void onBeforeWaitingCurrentImage(std::function<void(uint32_t)> cb);
 
  private:
     static const int MAX_FRAMES_IN_FLIGHT = 2;
@@ -44,9 +44,9 @@ class Renderer : public IDrawer, public DeviceBound {
 
     std::atomic<bool> _hasFramebufferResized;
 
-    std::function<void(uint32_t)> _updateUniformBuffer;
+    std::function<void(uint32_t)> _onBeforeWaitingCurrentImage;
 
-    CommandPool* _pool = nullptr;
+    CommandPool* _cmdPool = nullptr;
     Vulcain::GlfwWindow* _window = nullptr;
 
     void _createSyncObjects();

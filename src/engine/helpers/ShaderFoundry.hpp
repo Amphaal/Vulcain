@@ -27,7 +27,7 @@
 
 #include <cmrc/cmrc.hpp>
 
-#include <spirv_cross/spirv_reflect.hpp>
+#include <spirv_cross/spirv_cross.hpp>
 
 CMRC_DECLARE(shadersResources);
 
@@ -141,10 +141,11 @@ class ShaderFoundry : public DeviceBound {
     // TODO : use it to generate layouts !
     void _reflectShaderFile(const cmrc::file& shaderBinary) {
         using namespace spirv_cross;
-        
-        //
-        std::vector<uint32_t> ir(shaderBinary.begin(), shaderBinary.end());
-        Compiler comp(std::move(ir));
+
+        Compiler comp(
+            reinterpret_cast<const uint32_t*>(shaderBinary.cbegin()), 
+            shaderBinary.size() / sizeof(uint32_t)
+        );
         
         // The SPIR-V is now parsed, and we can perform reflection on it.
         ShaderResources resources = comp.get_shader_resources();

@@ -61,6 +61,10 @@ class Swapchain : public VkSwapchainCreateInfoKHR, public DeviceBound, public IR
 
     operator VkSwapchainKHR() const { return _swapChain; }
 
+    auto imagesCount() const {
+        return _swapChainImages.size();
+    }
+
     std::vector<VkImage> images() const {
         return _swapChainImages;
     }

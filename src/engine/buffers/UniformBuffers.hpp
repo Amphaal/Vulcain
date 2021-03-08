@@ -22,51 +22,36 @@
 #include "IBuffer.hpp"
 #include "engine/DescriptorPool.hpp"
 
-#include <chrono>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-
 namespace Vulcain {
 
 template<class T>
 class UniformBuffers : private std::vector<IBuffer>, public DeviceBound, public IRegenerable {
  public:
-    UniformBuffers(DescriptorPool* descrPool) : DeviceBound(descrPool), IRegenerable(descrPool), _views(descrPool->views()) {
+    UniformBuffers(DescriptorPool* descrPool) : DeviceBound(descrPool), IRegenerable(descrPool), _swapchain(descrPool->swapchain()) {
         _gen();
     }
 
-    void updateUniformBuffer(uint32_t currentImage) {
-        static auto startTime = std::chrono::high_resolution_clock::now();
-
-        auto currentTime = std::chrono::high_resolution_clock::now();
-        float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
-        auto swapChainExtent = _views->renderpass()->swapchain()->imageExtent;
-
-        UBO_MVP ubo{};
-        ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        ubo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float) swapChainExtent.height, 0.1f, 10.0f);
-        ubo.proj[1][1] *= -1;
-
-        _mapToMemory(currentImage, ubo);
+    VkBuffer buffer(uint32_t currentImage) const {
+        return (*this)[currentImage].buffer;
     }
 
- private:
-    ImageViews* _views = nullptr;
-
-    void _mapToMemory(uint32_t currentImage, const UBO_MVP& ubo) {
-        auto &buffer = (*this)[currentImage].bufferMemory;
+    void mapToMemory(uint32_t currentImage, const T& ubo) {
+        auto &buffer = (*this)[currentImage];
+        auto memory = buffer.bufferMemory;
 
         //
         void* data;
-        vkMapMemory(*_device, buffer, 0, sizeof(ubo), 0, &data);
+        vkMapMemory(*_device, memory, 0, sizeof(ubo), 0, &data);
             memcpy(data, &ubo, sizeof(ubo));
-        vkUnmapMemory(*_device, buffer);
+        vkUnmapMemory(*_device, memory);
     }
-    
+
+ private:
+    Swapchain* _swapchain = nullptr;
+   
     void _gen() final {
         VkDeviceSize bufferSize = sizeof(T);
-        for(int i = 0; i < _views->count(); i++) {
+        for(int i = 0; i < _swapchain->imagesCount(); i++) {
             this->emplace_back(
                 this, 
                 bufferSize,

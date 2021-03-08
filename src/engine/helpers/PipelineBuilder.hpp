@@ -20,6 +20,7 @@
 #pragma once
 
 #include "engine/common/Vulcain.h"
+#include "engine/buffers/Vertex.hpp"
 
 namespace Vulcain {
 

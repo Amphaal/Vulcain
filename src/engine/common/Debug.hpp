@@ -19,9 +19,13 @@
 
 #pragma once
 
+#include <cxxabi.h>
+
 #include "Vulcain.h"
 
 #include <iostream>
+#include <string>
+#include <memory>
 
 namespace Vulcain {
 
@@ -39,5 +43,22 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
     std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
     return VK_FALSE;
 }
+
+namespace Debug {
+
+    static std::string _demangle(char const* mangled) {
+        auto ptr = std::unique_ptr<char, decltype(& std::free)>{
+            abi::__cxa_demangle(mangled, nullptr, nullptr, nullptr),
+            std::free
+        };
+        return {ptr.get()};
+    }
+
+    template<typename T>
+    static std::string demanglePtr(T* ptr) {
+        return _demangle(typeid(*ptr).name());
+    }
+
+}   // namespace Debug
 
 } // namespace Vulcain

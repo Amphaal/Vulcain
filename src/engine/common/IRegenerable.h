@@ -44,7 +44,7 @@ class IRegenerator : public IRegenerable {
     void regenerate();
 
  private:
-    void _fillPipes(std::stack<IRegenerable*>& stack, std::queue<IRegenerable*>& queue, IRegenerable* target);
+    void _fillPipes(std::stack<IRegenerable*>& stack, std::queue<IRegenerable*>& queue, IRegenerable* target, int level = 0);
 };
 
 

@@ -125,7 +125,7 @@ class CommandPool : public DeviceBound, public IRegenerable {
     }
 
     void _gen() final {
-        _allocateCommandBuffers(_views->count());
+        _allocateCommandBuffers(_views->imagesCount());
         if(_recordedCommands) _sendCommands();
     }
 

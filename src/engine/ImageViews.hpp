@@ -30,8 +30,8 @@ class ImageViews : public DeviceBound, public IRegenerable {
     }
 
     // how many images handled
-    int count() const {
-        return _c;
+    auto imagesCount() const {
+        return _renderpass->swapchain()->imagesCount();
     }
 
     Renderpass* renderpass() const {

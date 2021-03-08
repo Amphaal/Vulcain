@@ -19,7 +19,7 @@
 
 #include "Renderer.h"
 
-Vulcain::Renderer::Renderer(CommandPool* pool, Vulcain::GlfwWindow* window) : DeviceBound(pool), _pool(pool), _window(window) {
+Vulcain::Renderer::Renderer(CommandPool* cmdPool, Vulcain::GlfwWindow* window) : DeviceBound(cmdPool), _cmdPool(cmdPool), _window(window) {
     _createSyncObjects();
     
     //
@@ -39,8 +39,9 @@ Vulcain::Renderer::~Renderer() {
     }
 }
 
-void Vulcain::Renderer::bindUniformBufferUpdater(std::function<void(uint32_t)> updater) {
-    _updateUniformBuffer = updater;
+// You might want to set a callback to UBO updates
+void Vulcain::Renderer::onBeforeWaitingCurrentImage(std::function<void(uint32_t)> cb) {
+    _onBeforeWaitingCurrentImage = cb;
 }
 
 void Vulcain::Renderer::draw() {
@@ -69,7 +70,7 @@ void Vulcain::Renderer::draw() {
     assert(result == VK_SUCCESS || result == VK_SUBOPTIMAL_KHR);
 
     // update uniform buffers there if any
-    if(_updateUniformBuffer) _updateUniformBuffer(imageIndex);
+    if(_onBeforeWaitingCurrentImage) _onBeforeWaitingCurrentImage(imageIndex);
 
     // if has an image in fight has fence on index, wait for it to be processed
     if (_imagesInFlight[imageIndex] != VK_NULL_HANDLE) {
@@ -88,7 +89,7 @@ void Vulcain::Renderer::draw() {
     submitInfo.pWaitDstStageMask = waitStages;
     
     submitInfo.commandBufferCount = 1;
-    VkCommandBuffer buffers[] = {_pool->commandBuffer(imageIndex)};
+    VkCommandBuffer buffers[] = {_cmdPool->commandBuffer(imageIndex)};
     submitInfo.pCommandBuffers = buffers;
     
     VkSemaphore signalSemaphores[] = {_renderFinishedSemaphores[_currentFrame]};
@@ -130,7 +131,7 @@ void Vulcain::Renderer::_createSyncObjects() {
     _imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
     _renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
     _inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
-    _imagesInFlight.resize(_pool->views()->count(), VK_NULL_HANDLE);
+    _imagesInFlight.resize(_cmdPool->views()->imagesCount(), VK_NULL_HANDLE);
 
     VkSemaphoreCreateInfo semaphoreInfo{};
     semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -152,7 +153,7 @@ void Vulcain::Renderer::_createSyncObjects() {
 }
 
 Vulcain::Swapchain* Vulcain::Renderer::_swapchain() const {
-    return _pool->views()->renderpass()->swapchain();
+    return _cmdPool->views()->renderpass()->swapchain();
 }
 
 void Vulcain::Renderer::_regenerateSwapChain() {

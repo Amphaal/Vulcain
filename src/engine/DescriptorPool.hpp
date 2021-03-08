@@ -19,33 +19,34 @@
 
 #pragma once
 
-#include "ImageViews.hpp"
+#include "Swapchain.hpp"
 
 namespace Vulcain {
 
 class DescriptorPool : public DeviceBound, public IRegenerable {
  public:
-    DescriptorPool(ImageViews *views) : DeviceBound(views), IRegenerable(views), _views(views) {
+    DescriptorPool(Swapchain* swapchain) : DeviceBound(swapchain), IRegenerable(swapchain), _swapchain(swapchain) {
         _gen();
     }
+
+    operator VkDescriptorPool() const { return _descriptorPool; }
 
     ~DescriptorPool() {
         _degen();
     }
 
-    ImageViews* views() const {
-        return _views;
+    Swapchain* swapchain() const {
+        return _swapchain;
     }
 
  private:
-    ImageViews* _views = nullptr;
+    Swapchain* _swapchain = nullptr;
     VkDescriptorPool _descriptorPool;
-    uint32_t _count = 0;
 
     void _gen() final {
         VkDescriptorPoolSize poolSize{};
         poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        poolSize.descriptorCount = static_cast<uint32_t>(_views->count());
+        poolSize.descriptorCount = static_cast<uint32_t>(_swapchain->imagesCount());
 
         VkDescriptorPoolCreateInfo poolInfo{};
         poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;

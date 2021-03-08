@@ -19,6 +19,8 @@
 
 #include "IRegenerable.h"
 
+#include "Debug.hpp"
+
 #include <assert.h>
 
 Vulcain::IRegenerable::IRegenerable(IRegenerable* chainPredecessor) {
@@ -29,17 +31,26 @@ Vulcain::IRegenerable::IRegenerable(IRegenerable* chainPredecessor) {
 
 Vulcain::IRegenerator::IRegenerator() : IRegenerable(nullptr) { }
 
-void Vulcain::IRegenerator::_fillPipes(std::stack<IRegenerable*>& stack, std::queue<IRegenerable*>& queue, IRegenerable* target) {
+void Vulcain::IRegenerator::_fillPipes(std::stack<IRegenerable*>& stack, std::queue<IRegenerable*>& queue, IRegenerable* target, int level) {
     stack.push(target);
     queue.push(target);
-    
+
+        // log
+        auto pad = [](int level) {
+            return std::string(level, '--');
+        };
+        std::cout << pad(level) << Debug::demanglePtr(target) << std::endl;
+        
     if(target->_children.empty()) return;
     auto cp = target->_children;
 
     while (!cp.empty()) {
         auto child = stack.top();
+        
         cp.pop();
-        _fillPipes(stack, queue, child);
+        level++;
+
+        _fillPipes(stack, queue, child, level);
     }
 }
 
