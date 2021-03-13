@@ -49,10 +49,6 @@ struct SwapChainSupportDetails {
 
         return VK_PRESENT_MODE_FIFO_KHR;
     }
-
-    VkExtent2D getSwapExtent(GlfwWindow* window) const {
-        return window->framebufferSize();
-    }
 };
 
 struct PhysicalDeviceDetails {
@@ -60,6 +56,7 @@ struct PhysicalDeviceDetails {
     Surface* surface = nullptr;
     SwapChainSupportDetails swapchainDetails;
     int presentationAndGraphicsQueueIndex = 0;
+    VkSampleCountFlags handledMaxSampling = VK_SAMPLE_COUNT_1_BIT;
 };
 
 } // namespace Vulcain

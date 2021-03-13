@@ -1,0 +1,10 @@
+mingw64/mingw-w64-x86_64-clang
+mingw64/mingw-w64-x86_64-lld
+mingw64/mingw-w64-x86_64-gdb
+mingw64/mingw-w64-x86_64-cmake
+mingw64/mingw-w64-x86_64-ninja
+mingw64/mingw-w64-x86_64-glfw
+mingw64/mingw-w64-x86_64-glm
+mingw64/mingw-w64-x86_64-vulkan-devel
+mingw64/mingw-w64-x86_64-spirv-cross
+mingw64/mingw-w64-x86_64-glslang

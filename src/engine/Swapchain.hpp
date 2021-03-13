@@ -102,8 +102,7 @@ class Swapchain : public VkSwapchainCreateInfoKHR, public DeviceBound, public IR
     void _gen() final {
         // update extent
         auto const &swapChainSupport = _device->swapchainDetails();
-        const auto extent = swapChainSupport.getSwapExtent(_device->surface()->window());
-        this->imageExtent = extent;
+        this->imageExtent = _device->surface()->window()->framebufferSize();
 
         // create swapchain...
         auto result = vkCreateSwapchainKHR(*_device, this, nullptr, &_swapChain);
