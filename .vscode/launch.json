@@ -13,7 +13,7 @@
             "cwd": "${workspaceFolder}",
             "MIMode": "gdb",
             "externalConsole": false,
-            "program": "${workspaceFolder}/build/Vulcain.exe",
+            "program": "${workspaceFolder}/build/bin/Vulcain-Example.exe",
             "miDebuggerPath": "${env:MINGW64_ROOT}/bin/gdb.exe",
             "environment": [
                 {

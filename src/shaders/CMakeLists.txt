@@ -18,7 +18,8 @@ endforeach(GLSL)
 
 include(CMakeRC)
 
-cmrc_add_resource_library(shadersResources 
+cmrc_add_resource_library(shaderModules 
+    ALIAS Vulcain::ShaderModules
     WHENCE generated
     ${SPIRV_BINARY_FILES}
 )
