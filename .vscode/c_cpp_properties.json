@@ -10,7 +10,8 @@
             },
             "includePath": [
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/src/engine"
+                "${workspaceFolder}/src/engine",
+                "${workspaceFolder}/build"
             ],
             "defines": [
                 "_DEBUG",

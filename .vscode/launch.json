@@ -8,7 +8,7 @@
             "targetArchitecture": "x64",
             "type": "cppdbg",
             "preLaunchTask": "2. Build",
-            "name" : "Launch",
+            "name" : "Launch Example",
             "request": "launch",
             "cwd": "${workspaceFolder}",
             "MIMode": "gdb",
@@ -18,14 +18,26 @@
             "environment": [
                 {
                     "name": "VK_LAYER_PATH",
-                    "value": "C:\\msys64\\mingw64\\bin",
-                    // "value": "C:\\VulkanSDK\\1.2.162.1\\Bin"
+                    "value": "C:\\msys64\\mingw64\\bin"
                 },
                 // {
                 //     "name": "VK_LOADER_DEBUG",
                 //     "value": "all",
                 // }
             ]
+        },
+        {
+            "targetArchitecture": "x64",
+            "type": "cppdbg",
+            "preLaunchTask": "2. Build",
+            "name" : "Reflecteur",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "MIMode": "gdb",
+            "externalConsole": false,
+            "program": "${workspaceFolder}/build/bin/Vulcain-Reflecteur.exe",
+            "miDebuggerPath": "${env:MINGW64_ROOT}/bin/gdb.exe",
+            "args": ["build/src/shaders/generated_spirv/basic.vert.spv", "build/generated_cpp"]
         },
     ]
 }

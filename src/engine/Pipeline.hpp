@@ -25,7 +25,8 @@
 #include "DescriptorPool.hpp"
 
 #include "buffers/UniformBuffers.hpp"
-#include "buffers/UBO.hpp"
+
+#include "toys/UBO.hpp"
 
 namespace Vulcain {
 
@@ -48,7 +49,7 @@ class Pipeline : public DeviceBound, public IRegenerable {
     }
 
     void updateUniformBuffer(uint32_t currentImage) {
-        auto generated = UBO_MVP::generate(_swapchain);
+        auto generated = spinUBO(_swapchain->imageExtent);
         _uniformBuffers.mapToMemory(currentImage, generated);
     }
 
@@ -69,7 +70,7 @@ class Pipeline : public DeviceBound, public IRegenerable {
     Swapchain* _swapchain = nullptr;
     std::vector<VkDescriptorSet> _descriptorSets;
 
-    UniformBuffers<UBO_MVP> _uniformBuffers;
+    UniformBuffers<UniformBufferObject> _uniformBuffers;
 
     void _degen() final {}
     void _gen() final {
@@ -106,7 +107,7 @@ class Pipeline : public DeviceBound, public IRegenerable {
 
     void _createDescriptorSetLayouts() {
         //
-        auto uboLayoutBinding = UBO_MVP::createDescriptorSetLayout();
+        auto uboLayoutBinding = UniformBufferObject::binding();
 
         VkDescriptorSetLayoutCreateInfo layoutInfo{};
         layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -135,7 +136,7 @@ class Pipeline : public DeviceBound, public IRegenerable {
             VkDescriptorBufferInfo bufferInfo{};
             bufferInfo.buffer = _uniformBuffers.buffer(i);
             bufferInfo.offset = 0;
-            bufferInfo.range = sizeof(UBO_MVP);
+            bufferInfo.range = sizeof(UniformBufferObject);
 
             VkWriteDescriptorSet descriptorWrite{};
             descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;

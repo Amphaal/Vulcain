@@ -1,5 +1,5 @@
 add_executable(Vulcain-Example
-    Example.cpp
+    main.cpp
 )
 
 target_link_libraries(Vulcain-Example PRIVATE 

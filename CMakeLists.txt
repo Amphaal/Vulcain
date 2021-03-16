@@ -33,7 +33,9 @@ set(CMAKE_C_STANDARD 11)
 ## Sources ##
 #############
 
+add_subdirectory(deps/magic_enum)
+
 add_subdirectory(src/shaders)
-add_subdirectory(src/engine)
 add_subdirectory(src/generator)
+add_subdirectory(src/engine)
 add_subdirectory(src/example)

@@ -114,6 +114,7 @@
         "stack": "cpp",
         "span": "cpp",
         "version": "cpp",
-        "__functional_03": "cpp"
+        "__functional_03": "cpp",
+        "regex": "cpp"
     }
 }
