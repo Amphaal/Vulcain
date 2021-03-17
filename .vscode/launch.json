@@ -25,19 +25,6 @@
                 //     "value": "all",
                 // }
             ]
-        },
-        {
-            "targetArchitecture": "x64",
-            "type": "cppdbg",
-            "preLaunchTask": "2. Build",
-            "name" : "Reflecteur",
-            "request": "launch",
-            "cwd": "${workspaceFolder}",
-            "MIMode": "gdb",
-            "externalConsole": false,
-            "program": "${workspaceFolder}/build/bin/Vulcain-Reflecteur.exe",
-            "miDebuggerPath": "${env:MINGW64_ROOT}/bin/gdb.exe",
-            "args": ["build/src/shaders/generated_spirv/basic.vert.spv", "build/generated_cpp"]
-        },
+        }
     ]
 }

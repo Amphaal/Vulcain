@@ -69,11 +69,11 @@ class Args {
             path = std::filesystem::absolute(path);
 
             if(!std::filesystem::exists(path)) {
-                throw std::logic_error("“" + path.string() + "” must be an existing file !");
+                throw std::logic_error("[" + path.string() + "] must be an existing file !");
             }
 
             if(std::filesystem::is_directory(path)) {
-                throw std::logic_error("“" + path.string() + "” is expected to be a file !");
+                throw std::logic_error("[" + path.string() + "] is expected to be a file !");
             }
 
             toReflectSPRIRVFiles.push_back(path);

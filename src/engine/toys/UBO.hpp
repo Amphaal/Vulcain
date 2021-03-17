@@ -1,6 +1,6 @@
 #pragma once
 
-#include "generated_cpp/basic.vert.hpp"
+#include "basic.vert.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -22,8 +22,6 @@ namespace Vulcain {
         ubo.proj[1][1] *= -1;
 
         return ubo;
-    }
-
-};
+    };
 
 } // namespace Vulcain

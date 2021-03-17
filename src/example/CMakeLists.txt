@@ -1,11 +1,11 @@
-add_executable(Vulcain-Example
+add_executable(${PROJECT_NAME}-Example
     main.cpp
 )
 
-target_link_libraries(Vulcain-Example PRIVATE 
-    Vulcain-Engine
+target_link_libraries(${PROJECT_NAME}-Example PRIVATE 
+    ${PROJECT_NAME}-Engine
 )
 
-set_target_properties(Vulcain-Example PROPERTIES
+set_target_properties(${PROJECT_NAME}-Example PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )

@@ -11,7 +11,8 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/src/engine",
-                "${workspaceFolder}/build"
+                "${workspaceFolder}/build",
+                "${workspaceFolder}/build/src/shaders"
             ],
             "defines": [
                 "_DEBUG",

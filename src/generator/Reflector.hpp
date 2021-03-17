@@ -109,6 +109,6 @@ class Reflector {
             auto found = strPathExt.find(possibleExt);
             if(found != -1) return flag;
         }
-        throw std::logic_error("Cannot determine associated stage for “" + path.string() + "” file");
+        throw std::logic_error("Cannot determine associated stage for [" + path.string() + "] file");
     }
 };
