@@ -53,7 +53,7 @@ struct SwapChainSupportDetails {
 
 struct PhysicalDeviceDetails {
     const VkPhysicalDevice pDevice;
-    Surface* surface = nullptr;
+    const Surface* surface = nullptr;
     SwapChainSupportDetails swapchainDetails;
     int presentationAndGraphicsQueueIndex = 0;
     VkSampleCountFlags handledMaxSampling = VK_SAMPLE_COUNT_1_BIT;

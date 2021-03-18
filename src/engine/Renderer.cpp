@@ -19,7 +19,11 @@
 
 #include "Renderer.h"
 
-Vulcain::Renderer::Renderer(CommandPool* cmdPool, Vulcain::GlfwWindow* window) : DeviceBound(cmdPool), _cmdPool(cmdPool), _window(window) {
+Vulcain::Renderer::Renderer(const CommandPool* cmdPool, Vulcain::GlfwWindow* window, Vulcain::Swapchain* swapchain) : 
+    DeviceBound(cmdPool), 
+    _cmdPool(cmdPool), 
+    _swapchain(swapchain),
+    _window(window) {
     _createSyncObjects();
     
     //
@@ -54,7 +58,7 @@ void Vulcain::Renderer::draw() {
     // acquire image
     result = vkAcquireNextImageKHR(
         *_device, 
-        *_swapchain(), 
+        *_swapchain, 
         UINT64_MAX, 
         _imageAvailableSemaphores[_currentFrame], 
         VK_NULL_HANDLE, 
@@ -106,7 +110,7 @@ void Vulcain::Renderer::draw() {
     presentInfo.waitSemaphoreCount = 1;
     presentInfo.pWaitSemaphores = signalSemaphores;
 
-    VkSwapchainKHR swapChains[] = {*_swapchain()};
+    VkSwapchainKHR swapChains[] = {*_swapchain};
     presentInfo.swapchainCount = 1;
     presentInfo.pSwapchains = swapChains;
     presentInfo.pImageIndices = &imageIndex;
@@ -152,10 +156,6 @@ void Vulcain::Renderer::_createSyncObjects() {
     }
 }
 
-Vulcain::Swapchain* Vulcain::Renderer::_swapchain() const {
-    return _cmdPool->views()->renderpass()->swapchain();
-}
-
 void Vulcain::Renderer::_regenerateSwapChain() {
     //
     _window->waitUntilSwapchainIsLegal();
@@ -164,5 +164,5 @@ void Vulcain::Renderer::_regenerateSwapChain() {
     vkDeviceWaitIdle(*_device);
 
     // regenerate chain
-    _swapchain()->regenerate();
+    _swapchain->regenerate();
 }

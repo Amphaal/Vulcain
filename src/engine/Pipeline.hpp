@@ -30,14 +30,36 @@
 
 namespace Vulcain {
 
+class PipelineFactory {
+ public:
+    PipelineFactory(Renderpass* renderpass, DescriptorPool* descrPool) : _renderpass(renderpass), _descrPool(descrPool) {}
+    
+    DescriptorPool* descrPool() const {
+        return _descrPool;
+    }
+
+    Renderpass* renderpass() const {
+        return _renderpass;
+    }
+
+ private:
+    DescriptorPool* _descrPool = nullptr;
+    Renderpass* _renderpass = nullptr;
+};
+
 class Pipeline : public DeviceBound, public IRegenerable {
  public:
-    Pipeline(Renderpass* renderpass, DescriptorPool* descrPool, const ShaderFoundry::Modules& modules) : 
-        DeviceBound(renderpass), IRegenerable(descrPool), _swapchain(renderpass->swapchain()), _descrPool(descrPool), _uniformBuffers(descrPool) {
-        _createDescriptorSetLayouts();
+    Pipeline(const PipelineFactory* factory, const ShaderFoundry::Modules& modules) : 
+        DeviceBound(factory->renderpass()), 
+        IRegenerable(factory->descrPool()), 
+        _swapchain(factory->renderpass()->swapchain()), 
+        _descrPool(factory->descrPool()), 
+        _uniformBuffers(factory->descrPool()) {
+        //
+        _createDescriptorSetLayout();
         _gen();
         _createPipelineLayout();
-        _createPipeline(_swapchain, renderpass, modules);
+        _createPipeline(_swapchain, factory->renderpass(), modules);
     }
 
     operator VkPipeline() const { return _pipeline; }
@@ -66,8 +88,8 @@ class Pipeline : public DeviceBound, public IRegenerable {
     VkPipelineLayout _layout;
     VkDescriptorSetLayout _descriptorSetLayout;
 
-    DescriptorPool* _descrPool = nullptr;
-    Swapchain* _swapchain = nullptr;
+    const DescriptorPool* _descrPool = nullptr;
+    const Swapchain* _swapchain = nullptr;
     std::vector<VkDescriptorSet> _descriptorSets;
 
     UniformBuffers<UniformBufferObject> _uniformBuffers;
@@ -77,7 +99,7 @@ class Pipeline : public DeviceBound, public IRegenerable {
         _createDescriptorSets();
     }
 
-    void _createPipeline(Swapchain* swapchain, Renderpass* renderpass, const ShaderFoundry::Modules& modules) {
+    void _createPipeline(const Swapchain* swapchain, const Renderpass* renderpass, const ShaderFoundry::Modules& modules) {
         //
         PipelineBuilder builder;
         
@@ -105,7 +127,7 @@ class Pipeline : public DeviceBound, public IRegenerable {
         assert(result == VK_SUCCESS);
     }
 
-    void _createDescriptorSetLayouts() {
+    void _createDescriptorSetLayout() {
         //
         auto uboLayoutBinding = UniformBufferObject::binding();
 

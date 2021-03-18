@@ -30,12 +30,14 @@ struct UB_Member {
 
 struct UB {
     std::string name;
+    uint32_t binding = 0;
+    uint32_t set = 0;
     std::vector<UB_Member> members;
 };
 
 class UniformBuffersFiller : public IFiller<UniformBuffersFiller, UB> {
  public:
-    static void fillMetadata(spirv_cross::Compiler &comp, spirv_cross::ShaderResources &resources, GLSLCompilerWrapper &glslComp, std::vector<UB> &ubs) {
+    static void fillMetadata(spirv_cross::Compiler &comp, spirv_cross::ShaderResources &resources, GLSLCompilerWrapper &glslComp, IFiller::Container &ubs) {
         // get uniform buffers data
         ubs.resize(resources.uniform_buffers.size());
 
@@ -44,6 +46,10 @@ class UniformBuffersFiller : public IFiller<UniformBuffersFiller, UB> {
             auto &u_source = resources.uniform_buffers[i];
             auto &ub = ubs[i];
             
+            // get binding and set
+            ub.binding = comp.get_decoration(u_source.id, spv::DecorationBinding);
+            ub.set = comp.get_decoration(u_source.id, spv::DecorationDescriptorSet);
+
             // find UB name
             ub.name = u_source.name;
             

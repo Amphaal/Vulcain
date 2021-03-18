@@ -28,7 +28,7 @@ class Renderer : public IDrawer, public DeviceBound {
  public:
    using BeforeWaitingCurrentImageCallback = std::function<void(uint32_t)>;
 
-    Renderer(CommandPool* pool, Vulcain::GlfwWindow* window);
+    Renderer(const CommandPool* pool, GlfwWindow* window, Vulcain::Swapchain* swapchain);
     ~Renderer();
 
     void draw() final;
@@ -48,12 +48,15 @@ class Renderer : public IDrawer, public DeviceBound {
 
     BeforeWaitingCurrentImageCallback _onBeforeWaitingCurrentImage;
 
-    CommandPool* _cmdPool = nullptr;
-    Vulcain::GlfwWindow* _window = nullptr;
+    const CommandPool* _cmdPool = nullptr;
+
+    // non-const
+    Swapchain* _swapchain = nullptr;
+    GlfwWindow* _window = nullptr;
 
     void _createSyncObjects();
 
-    Swapchain* _swapchain() const;
+
 
     void _regenerateSwapChain();
 };

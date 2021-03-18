@@ -57,11 +57,11 @@ class GlfwWindow {
         }
     }
 
-    HWND handle() {
+    HWND handle() const {
         return glfwGetWin32Window(_window);
     }
 
-    VkExtent2D framebufferSize() {
+    VkExtent2D framebufferSize() const {
         int width, height;
         glfwGetFramebufferSize(_window, &width, &height);
         
@@ -71,7 +71,7 @@ class GlfwWindow {
         };
     }
 
-    void waitUntilSwapchainIsLegal() {
+    void waitUntilSwapchainIsLegal() const {
         //
         int width, height;
         glfwGetFramebufferSize(_window, &width, &height);

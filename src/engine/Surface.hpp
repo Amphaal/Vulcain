@@ -26,7 +26,7 @@ namespace Vulcain {
 
 class Surface {
  public:    
-    Surface(GlfwWindow* window, Instance* instance) : _instance(instance), _window(window) {
+    Surface(GlfwWindow* window, const Instance* instance) : _instance(instance), _window(window) {
         VkWin32SurfaceCreateInfoKHR createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
         createInfo.hwnd = _window->handle();
@@ -40,11 +40,11 @@ class Surface {
         if(_instance) vkDestroySurfaceKHR(*_instance, _surface, nullptr);
     }
 
-    Instance* instance() const {
+    const Instance* instance() const {
         return _instance;
     }
 
-    GlfwWindow* window() const {
+    const GlfwWindow* window() const {
         return _window;
     }
 
@@ -52,8 +52,8 @@ class Surface {
 
  private:
     VkSurfaceKHR _surface;
-    Instance* _instance = nullptr;
-    GlfwWindow* _window = nullptr;
+    const Instance* _instance = nullptr;
+    const GlfwWindow* _window = nullptr;
 };
 
 } // namespace Vulcain

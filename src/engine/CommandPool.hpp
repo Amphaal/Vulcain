@@ -43,7 +43,7 @@ class CommandPool : public DeviceBound, public IRegenerable {
         _sendCommands();
     }
 
-    ImageViews* views() const {
+    const ImageViews* views() const {
         return _views;
     }
 
@@ -57,7 +57,7 @@ class CommandPool : public DeviceBound, public IRegenerable {
     VkCommandPool _commandPool;
     RecordCallback _recordedCommands;
     std::vector<VkCommandBuffer> _commandBuffers;
-    ImageViews* _views = nullptr;
+    const ImageViews* _views = nullptr;
 
     void _sendCommands() {
         for(size_t i = 0; i < _commandBuffers.size(); i++) {

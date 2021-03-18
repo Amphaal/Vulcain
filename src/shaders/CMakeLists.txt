@@ -14,6 +14,7 @@ file(GLOB_RECURSE GLSL_SOURCE_FILES
 include(ExternalProject)
 ExternalProject_Add(SPIRVCppTool
     INSTALL_COMMAND ""
+    CMAKE_ARGS "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
     SOURCE_DIR ${CMAKE_SOURCE_DIR}/src/generator
 )
 ExternalProject_Get_Property(SPIRVCppTool BINARY_DIR)

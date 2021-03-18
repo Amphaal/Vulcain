@@ -26,7 +26,7 @@ namespace Vulcain {
 template<class T, VkBufferUsageFlagBits q>
 class IStaticBuffer : public IVerticeBuffer<const T> {
  public:
-    IStaticBuffer(CommandPool* pool, const T vertices) : IVerticeBuffer<const T>(
+    IStaticBuffer(const CommandPool* pool, const T vertices) : IVerticeBuffer<const T>(
         pool, 
         vertices, 
         VK_BUFFER_USAGE_TRANSFER_DST_BIT | q, 

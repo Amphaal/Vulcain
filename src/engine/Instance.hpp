@@ -42,7 +42,7 @@ class Instance {
         _mayCreateDebugMessenger();
     }
 
-    std::vector<VkPhysicalDevice> getPhysicalDevices() const {
+    const std::vector<VkPhysicalDevice> getPhysicalDevices() const {
         uint32_t deviceCount = 0;
         vkEnumeratePhysicalDevices(_instance, &deviceCount, nullptr);
         assert(deviceCount);

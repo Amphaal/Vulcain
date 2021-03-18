@@ -63,7 +63,7 @@ class Renderpass : public DeviceBound, public IRegenerable {
 
     operator VkRenderPass() const { return _renderPass; }
 
-    Swapchain* swapchain() const {
+    const Swapchain* swapchain() const {
         return _swapchain;
     }
 
@@ -78,7 +78,7 @@ class Renderpass : public DeviceBound, public IRegenerable {
     VkSubpassDependency _dependency{};
     VkRenderPassCreateInfo _renderPassInfo{};
 
-    Swapchain* _swapchain = nullptr;
+    const Swapchain* _swapchain = nullptr;
     VkRenderPass _renderPass;
 
     void _gen() final {

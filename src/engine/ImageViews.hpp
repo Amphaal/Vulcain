@@ -34,7 +34,7 @@ class ImageViews : public DeviceBound, public IRegenerable {
         return _renderpass->swapchain()->imagesCount();
     }
 
-    Renderpass* renderpass() const {
+    const Renderpass* renderpass() const {
         return _renderpass;
     }
 
@@ -49,9 +49,9 @@ class ImageViews : public DeviceBound, public IRegenerable {
  private:
     std::vector<VkImageView> _views;
     std::vector<VkFramebuffer> _fbs;
-    Renderpass* _renderpass = nullptr;
+    const Renderpass* _renderpass = nullptr;
 
-    void _pushImageView(Swapchain* swapchain, VkImage swapChainImage, VkImageView* into) {
+    void _pushImageView(const Swapchain* swapchain, VkImage swapChainImage, VkImageView* into) {
         //
         VkImageViewCreateInfo createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -73,7 +73,7 @@ class ImageViews : public DeviceBound, public IRegenerable {
         assert(result == VK_SUCCESS);
     }
 
-    void _pushFramebuffer(Swapchain* swapchain, Renderpass* renderpass, VkImageView targetView, VkFramebuffer* into) {
+    void _pushFramebuffer(const Swapchain* swapchain, const Renderpass* renderpass, VkImageView targetView, VkFramebuffer* into) {
         //
         VkFramebufferCreateInfo framebufferInfo{};
         framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;

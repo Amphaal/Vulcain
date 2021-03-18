@@ -34,7 +34,7 @@ struct ReflectedFile {
     UniformBuffersFiller::Container uniformBuffers;
 };
 
-using ReflectionPass = std::vector<std::pair<const std::filesystem::path*, ReflectedFile>>;
+using ReflectionPass = std::map<const char *, std::vector<ReflectedFile>>;
 
 const std::map<const char*, VkShaderStageFlagBits> FIND_STAGE_FROM_EXT {
     { ".vert", VK_SHADER_STAGE_VERTEX_BIT },
@@ -51,14 +51,23 @@ class Reflector {
 
         for(const auto &filePath : _args->toReflectSPRIRVFiles) {
             // add file to pass
-            auto &filePass = pass.emplace_back(&filePath, ReflectedFile{});
-            auto &rFile = filePass.second;
+            ReflectedFile rFile{};
             
             // fill stage
-            rFile.stage = _getStageFlag(filePath);
+            auto filename = _getStageFlag(filePath, rFile.stage);
 
             // get objects
             _reflectShaderFile(filePath, rFile);
+
+            // insert into pass
+            auto pipelineFound = pass.find(filename.c_str());
+            if(pipelineFound == pass.cend()) {
+                std::vector<ReflectedFile> v(1);
+                v[0] = std::move(rFile);
+               pass.emplace(filename.c_str(), std::move(v));
+            } else {
+                pipelineFound->second.push_back(std::move(rFile));
+            }
         }
 
         return pass;
@@ -67,7 +76,6 @@ class Reflector {
  private:
     const Args* _args = nullptr;
 
-    // TODO : use it to generate layouts !
     static void _reflectShaderFile(const std::filesystem::path &filePath, ReflectedFile &rFile) {
         // get file buffer
         auto buffer = _readFile(filePath);
@@ -102,13 +110,17 @@ class Reflector {
         return buffer;
     }
 
-    static VkShaderStageFlagBits _getStageFlag(const std::filesystem::path& path) {
-        auto strPathExt = path.stem().string();
+    static std::string _getStageFlag(const std::filesystem::path& path, VkShaderStageFlagBits& bit) {
+        auto filename = path.stem().string();
 
         for(auto [possibleExt, flag] : FIND_STAGE_FROM_EXT) {
-            auto found = strPathExt.find(possibleExt);
-            if(found != -1) return flag;
+            auto found = filename.find(possibleExt);
+            if(found != std::string::npos) {
+                bit = flag;
+                return filename.substr(0, found);
+            }
         }
+
         throw std::logic_error("Cannot determine associated stage for [" + path.string() + "] file");
     }
 };

@@ -27,7 +27,7 @@ namespace Vulcain {
 
 class DevicePicker {
  public:
-    static Device getBestDevice(Surface* surface) {
+    static Device getBestDevice(const Surface* surface) {
         _mayRatePhysicalDevice(surface);
         return { &_getPreferedPhysicalDevice() };
     };
@@ -35,12 +35,12 @@ class DevicePicker {
  private:
     static inline std::multimap<int, PhysicalDeviceDetails> _pDevicesCandidates;
 
-     static void _mayRatePhysicalDevice(Surface* surface) {
+     static void _mayRatePhysicalDevice(const Surface* surface) {
         // no need to re-rate
         if(_pDevicesCandidates.size()) return;
         
         // find score for each physical device
-        for (auto device : surface->instance()->getPhysicalDevices()) {
+        for (auto const device : surface->instance()->getPhysicalDevices()) {
             PhysicalDeviceDetails pDetails {device, surface};
             
             auto score = _rateDeviceSuitability(pDetails, surface);
@@ -63,7 +63,7 @@ class DevicePicker {
     //
     //
 
-    static int _rateDeviceSuitability(PhysicalDeviceDetails &details, Surface* surface) {
+    static int _rateDeviceSuitability(PhysicalDeviceDetails &details, const Surface* surface) {
         int score = 0;
 
         // check properties
@@ -110,7 +110,7 @@ class DevicePicker {
         return VK_SAMPLE_COUNT_1_BIT;
     }
 
-    static bool _supportsSwapchain(PhysicalDeviceDetails &details, Surface* surface) {
+    static bool _supportsSwapchain(PhysicalDeviceDetails &details, const Surface* surface) {
         // get available extensions on device
         uint32_t extensionCount;
         vkEnumerateDeviceExtensionProperties(details.pDevice, nullptr, &extensionCount, nullptr);
@@ -169,7 +169,7 @@ class DevicePicker {
     }
 
     // returns potent queue index
-    static bool _hasPotententQueue(PhysicalDeviceDetails &details, Surface* surface) {
+    static bool _hasPotententQueue(PhysicalDeviceDetails &details, const Surface* surface) {
         // get queues
         uint32_t queueFamilyCount = 0;
         vkGetPhysicalDeviceQueueFamilyProperties(details.pDevice, &queueFamilyCount, nullptr);

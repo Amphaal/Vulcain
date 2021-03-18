@@ -35,12 +35,12 @@ class DescriptorPool : public DeviceBound, public IRegenerable {
         _degen();
     }
 
-    Swapchain* swapchain() const {
+    const Swapchain* swapchain() const {
         return _swapchain;
     }
 
  private:
-    Swapchain* _swapchain = nullptr;
+    const Swapchain* _swapchain = nullptr;
     VkDescriptorPool _descriptorPool;
 
     void _gen() final {

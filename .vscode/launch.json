@@ -25,6 +25,23 @@
                 //     "value": "all",
                 // }
             ]
+        },
+        {
+            "targetArchitecture": "x64",
+            "type": "cppdbg",
+            "preLaunchTask": "2. Build",
+            "name" : "Launch Reflecteur",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "MIMode": "gdb",
+            "externalConsole": false,
+            "program": "${workspaceFolder}/build/src/shaders/SPIRVCppTool-prefix/src/SPIRVCppTool-build/Vulcain-Reflecteur.exe",
+            "miDebuggerPath": "${env:MINGW64_ROOT}/bin/gdb.exe",
+            "args": [
+                "${workspaceFolder}/build/src/shaders/generated_spirv/basic.frag.spv",
+                "${workspaceFolder}/build/src/shaders/generated_spirv/basic.vert.spv",
+                "${workspaceFolder}/build/src/shaders/generated_hpp"
+            ]
         }
     ]
 }

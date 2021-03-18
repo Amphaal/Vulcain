@@ -51,7 +51,8 @@ int main() {
 
     DescriptorPool descrPool(&swapchain);
 
-    auto basicPipeline = Pipeline { &renderpass, &descrPool, foundry.modulesFromShaderName("basic") };
+    PipelineFactory plFactory(&renderpass, &descrPool);
+    auto basicPipeline = Pipeline { &plFactory, foundry.modulesFromShaderName("basic") };
     
     ImageViews views(&renderpass);
     CommandPool cmdPool(&views);
@@ -82,7 +83,7 @@ int main() {
         vkCmdDrawIndexed(cmdBuf, indexes.vertexCount(), 1, 0, 0, 0);
     });
 
-    Renderer renderer(&cmdPool, &window);
+    Renderer renderer(&cmdPool, &window, &swapchain);
     renderer.onBeforeWaitingCurrentImage([&basicPipeline](uint32_t currentImage) {
         basicPipeline.updateUniformBuffer(currentImage);
     });

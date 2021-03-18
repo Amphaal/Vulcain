@@ -47,7 +47,7 @@ class UniformBuffers : private std::vector<IBuffer>, public DeviceBound, public 
     }
 
  private:
-    Swapchain* _swapchain = nullptr;
+    const Swapchain* _swapchain = nullptr;
    
     void _gen() final {
         VkDeviceSize bufferSize = sizeof(T);

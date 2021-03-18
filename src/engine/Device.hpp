@@ -57,7 +57,7 @@ class Device {
         return _pDeviceDetails->swapchainDetails;
     }
 
-    Surface* surface() const {
+    const Surface* surface() const {
         return _pDeviceDetails->surface;
     }
 

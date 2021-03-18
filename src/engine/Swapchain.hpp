@@ -26,7 +26,7 @@ namespace Vulcain {
 
 class Swapchain : public VkSwapchainCreateInfoKHR, public DeviceBound, public IRegenerator {
  public:
-    Swapchain(Device* device) : VkSwapchainCreateInfoKHR{}, DeviceBound(device) {
+    Swapchain(const Device* device) : VkSwapchainCreateInfoKHR{}, DeviceBound(device) {
         //
         auto const &swapChainSupport = _device->swapchainDetails();
         const auto swapSurfaceFormat = swapChainSupport.getSwapSurfaceFormat();
@@ -65,7 +65,7 @@ class Swapchain : public VkSwapchainCreateInfoKHR, public DeviceBound, public IR
         return _swapChainImages.size();
     }
 
-    std::vector<VkImage> images() const {
+    const std::vector<VkImage> images() const {
         return _swapChainImages;
     }
 

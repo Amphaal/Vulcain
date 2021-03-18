@@ -64,7 +64,7 @@ class IBuffer : public DeviceBound {
         vkBindBufferMemory(*_device, buffer, bufferMemory, 0);
     }
 
-    void copyBuffer(CommandPool* pool, IBuffer& dstBuffer) {
+    void copyBuffer(const CommandPool* pool, IBuffer& dstBuffer) {
         VkCommandBufferAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
         allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
@@ -106,7 +106,7 @@ class IBuffer : public DeviceBound {
 template<typename T>
 class IVerticeBuffer : public IBuffer {
  public:
-    IVerticeBuffer(DeviceBound* deviceBound, T vertices, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties) : IBuffer(
+    IVerticeBuffer(const DeviceBound* deviceBound, T vertices, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties) : IBuffer(
             deviceBound, 
             _getBufferSize(vertices), 
             usage,

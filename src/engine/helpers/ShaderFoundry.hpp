@@ -37,7 +37,7 @@ class ShaderFoundry : public DeviceBound {
     using ModulesByPipeline = std::map<std::string, CreateInfoByStage>;
     using Modules = std::vector<VkPipelineShaderStageCreateInfo>;
 
-    ShaderFoundry(Device* device) : DeviceBound(device) {
+    ShaderFoundry(const Device* device) : DeviceBound(device) {
         _createShaderModules();
     }
 
