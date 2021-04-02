@@ -20,14 +20,14 @@
 #pragma once
 
 #include "IBuffer.hpp"
-#include "engine/DescriptorPool.hpp"
+#include "engine/DescriptorPools.hpp"
 
 namespace Vulcain {
 
 template<class T>
 class UniformBuffers : private std::vector<IBuffer>, public DeviceBound, public IRegenerable {
  public:
-    UniformBuffers(DescriptorPool* descrPool) : DeviceBound(descrPool), IRegenerable(descrPool), _swapchain(descrPool->swapchain()) {
+    UniformBuffers(DescriptorPools* descrPools) : DeviceBound(descrPools), IRegenerable(descrPools), _swapchain(descrPools->swapchain()) {
         _gen();
     }
 

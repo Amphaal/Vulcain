@@ -69,6 +69,10 @@ class Swapchain : public VkSwapchainCreateInfoKHR, public DeviceBound, public IR
         return _swapChainImages;
     }
 
+    const Device* device() const {
+        return _device;
+    }
+
     VkViewport defaultViewport() const {
         VkViewport viewport{};
 

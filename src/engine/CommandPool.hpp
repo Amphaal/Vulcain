@@ -78,7 +78,7 @@ class CommandPool : public DeviceBound, public IRegenerable {
             renderPassInfo.renderArea.offset = {0, 0};
             renderPassInfo.renderArea.extent = _views->renderpass()->swapchain()->imageExtent;
 
-            std::vector<VkClearValue> clearColors { {0.0f, 0.0f, 0.0f, 1.0f} };
+            const std::array<VkClearValue, 1> clearColors { {0.0f, 0.0f, 0.0f, 1.0f} };
             renderPassInfo.clearValueCount = clearColors.size();
             renderPassInfo.pClearValues = clearColors.data();
 

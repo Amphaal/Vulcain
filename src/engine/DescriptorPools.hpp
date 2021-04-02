@@ -23,15 +23,22 @@
 
 namespace Vulcain {
 
-class DescriptorPool : public DeviceBound, public IRegenerable {
+class DescriptorPools : public DeviceBound, public IRegenerable {
  public:
-    DescriptorPool(Swapchain* swapchain) : DeviceBound(swapchain), IRegenerable(swapchain), _swapchain(swapchain) {
-        _gen();
+    DescriptorPools(Swapchain* swapchain) : DeviceBound(swapchain), IRegenerable(swapchain), _swapchain(swapchain) {}
+
+    // might create specialized pool if needed
+    VkDescriptorPool pool(VkDescriptorType type) {
+        //
+        if(!_descriptorPools.contains(type)) {
+            _createDescrPool(type);
+        }
+        
+        //
+        return _descriptorPools[type];
     }
 
-    operator VkDescriptorPool() const { return _descriptorPool; }
-
-    ~DescriptorPool() {
+    ~DescriptorPools() {
         _degen();
     }
 
@@ -41,11 +48,11 @@ class DescriptorPool : public DeviceBound, public IRegenerable {
 
  private:
     const Swapchain* _swapchain = nullptr;
-    VkDescriptorPool _descriptorPool;
+    std::map<VkDescriptorType, VkDescriptorPool> _descriptorPools;
 
-    void _gen() final {
+    void _createDescrPool(VkDescriptorType type) {
         VkDescriptorPoolSize poolSize{};
-        poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSize.type = type;
         poolSize.descriptorCount = static_cast<uint32_t>(_swapchain->imagesCount());
 
         VkDescriptorPoolCreateInfo poolInfo{};
@@ -54,12 +61,20 @@ class DescriptorPool : public DeviceBound, public IRegenerable {
         poolInfo.pPoolSizes = &poolSize;
         poolInfo.maxSets = poolSize.descriptorCount;
 
-        auto result = vkCreateDescriptorPool(*_device, &poolInfo, nullptr, &_descriptorPool);
+        auto result = vkCreateDescriptorPool(*_device, &poolInfo, nullptr, &_descriptorPools[type]);
         assert(result == VK_SUCCESS);
     }
 
+    void _gen() final {
+        for(auto [type, pool] : _descriptorPools) {
+            _createDescrPool(type);
+        }
+    }
+
     void _degen() final {
-        vkDestroyDescriptorPool(*_device, _descriptorPool, nullptr);
+        for(auto [type, pool] : _descriptorPools) {
+            vkDestroyDescriptorPool(*_device, pool, nullptr);
+        }
     }
 };
 

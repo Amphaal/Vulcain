@@ -42,7 +42,7 @@ class ShaderFoundry : public DeviceBound {
     }
 
     // get the pipeline structs necessary from each module of a shader
-    Modules modulesFromShaderName(const std::string& shaderName) {
+    Modules modulesFromShaderName(const std::string& shaderName) const {
         Modules out;
 
         auto found = _pipelines.find(shaderName);

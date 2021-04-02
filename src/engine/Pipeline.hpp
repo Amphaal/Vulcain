@@ -20,46 +20,31 @@
 #pragma once
 
 #include "helpers/PipelineBuilder.hpp"
-#include "helpers/ShaderFoundry.hpp"
-#include "Renderpass.hpp"
-#include "DescriptorPool.hpp"
+
+#include "engine/Renderpass.hpp"
+#include "engine/DescriptorPools.hpp"
 
 #include "buffers/UniformBuffers.hpp"
 
 #include "toys/UBO.hpp"
 
+#include "generator/include/IDescriptorSetGenerator.h"
+
 namespace Vulcain {
-
-class PipelineFactory {
- public:
-    PipelineFactory(Renderpass* renderpass, DescriptorPool* descrPool) : _renderpass(renderpass), _descrPool(descrPool) {}
-    
-    DescriptorPool* descrPool() const {
-        return _descrPool;
-    }
-
-    Renderpass* renderpass() const {
-        return _renderpass;
-    }
-
- private:
-    DescriptorPool* _descrPool = nullptr;
-    Renderpass* _renderpass = nullptr;
-};
 
 class Pipeline : public DeviceBound, public IRegenerable {
  public:
-    Pipeline(const PipelineFactory* factory, const ShaderFoundry::Modules& modules) : 
-        DeviceBound(factory->renderpass()), 
-        IRegenerable(factory->descrPool()), 
-        _swapchain(factory->renderpass()->swapchain()), 
-        _descrPool(factory->descrPool()), 
-        _uniformBuffers(factory->descrPool()) {
+    Pipeline(const Renderpass* renderpass, DescriptorPools* descrPools, const ShaderFoundry::Modules& modules) : 
+        DeviceBound(renderpass), 
+        IRegenerable(descrPools), 
+        _swapchain(renderpass->swapchain()), 
+        _descrPool(descrPools), 
+        _uniformBuffers(descrPools) {
         //
         _createDescriptorSetLayout();
         _gen();
         _createPipelineLayout();
-        _createPipeline(_swapchain, factory->renderpass(), modules);
+        _createPipeline(_swapchain, renderpass, modules);
     }
 
     operator VkPipeline() const { return _pipeline; }
@@ -88,7 +73,7 @@ class Pipeline : public DeviceBound, public IRegenerable {
     VkPipelineLayout _layout;
     VkDescriptorSetLayout _descriptorSetLayout;
 
-    const DescriptorPool* _descrPool = nullptr;
+    DescriptorPools* _descrPool = nullptr;
     const Swapchain* _swapchain = nullptr;
     std::vector<VkDescriptorSet> _descriptorSets;
 
@@ -141,18 +126,21 @@ class Pipeline : public DeviceBound, public IRegenerable {
     }
 
     void _createDescriptorSets() {
+
         auto imgsCount = _swapchain->imagesCount(); 
         //
-        std::vector<VkDescriptorSetLayout> layouts(imgsCount, _descriptorSetLayout);
-        VkDescriptorSetAllocateInfo allocInfo{};
-        allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-        allocInfo.descriptorPool = *_descrPool;
-        allocInfo.descriptorSetCount = static_cast<uint32_t>(imgsCount);
-        allocInfo.pSetLayouts = layouts.data();
+        {
+            std::vector<VkDescriptorSetLayout> layouts(imgsCount, _descriptorSetLayout);
+            VkDescriptorSetAllocateInfo allocInfo{};
+            allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+            allocInfo.descriptorPool = _descrPool->pool(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+            allocInfo.descriptorSetCount = static_cast<uint32_t>(imgsCount);
+            allocInfo.pSetLayouts = layouts.data();
 
-        _descriptorSets.resize(imgsCount);
-        auto result = vkAllocateDescriptorSets(*_device, &allocInfo, _descriptorSets.data());
-        assert(result == VK_SUCCESS);
+            _descriptorSets.resize(imgsCount);
+            auto result = vkAllocateDescriptorSets(*_device, &allocInfo, _descriptorSets.data());
+            assert(result == VK_SUCCESS);
+        }
 
         for (size_t i = 0; i < imgsCount; i++) {
             VkDescriptorBufferInfo bufferInfo{};

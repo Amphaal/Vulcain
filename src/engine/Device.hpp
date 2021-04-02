@@ -27,7 +27,7 @@ namespace Vulcain {
 
 class Device {
  public:
-    static inline const std::vector<const char*> REQUIRED_DEVICE_EXTENSIONS {
+    static inline const std::array<const char*, 1> REQUIRED_DEVICE_EXTENSIONS {
         VK_KHR_SWAPCHAIN_EXTENSION_NAME
     };
 

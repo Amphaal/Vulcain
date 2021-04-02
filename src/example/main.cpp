@@ -20,7 +20,7 @@
 #include "engine/common/Vulcain.h"
 
 #include "engine/Renderer.h"
-#include "engine/Pipeline.hpp"
+#include "engine/helpers/PipelineFactory.hpp"
 #include "engine/helpers/DevicePicker.hpp"
 
 #include "engine/buffers/StaticBuffer.hpp"
@@ -44,15 +44,13 @@ int main() {
     Surface surface(&window, &instance);
     auto device = DevicePicker::getBestDevice(&surface);
     
-    ShaderFoundry foundry(&device);
-
     Swapchain swapchain(&device);
+
     Renderpass renderpass(&swapchain);
+    DescriptorPools descrPools(&swapchain);
 
-    DescriptorPool descrPool(&swapchain);
-
-    PipelineFactory plFactory(&renderpass, &descrPool);
-    auto basicPipeline = Pipeline { &plFactory, foundry.modulesFromShaderName("basic") };
+    PipelineFactory plFactory(&renderpass, &descrPools);
+    auto basicPipeline = plFactory.create("basic");
     
     ImageViews views(&renderpass);
     CommandPool cmdPool(&views);
